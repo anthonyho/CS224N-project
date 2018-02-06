@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[]{hyperref}
+\usepackage{tikz}
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;} 
+
+\title{CS224N Project Proposal}
+\author{Michael Baumer and Anthony Ho}
+\date{February 2018}
+
+\usepackage[square,sort,comma,numbers]{natbib}
+\usepackage{graphicx}
+\usepackage[paper=letterpaper,margin=0.75in]{geometry}
+
+\begin{document}
+\maketitle
+
+\begin{enumerate}
+    \item \textbf{Team:} Michael Baumer (mbaumer) and Anthony Ho (ahho)
+    \item \textbf{Mentor:} N/A
+    \item \textbf{Problem Description:} Many websites with user-submitted content must deal with toxic or abusive comments, but require increasingly fine-grained comment classifications to maintain civility without interfering with normal discourse. In this project, we will improve the identification and fine-grained classification of toxic online comments (Kaggle challenge suggested on course website, online at:
+    
+    \url{https://www.kaggle.com/c/jigsaw-toxic-comment-classification-challenge})
+    
+    \item \textbf{Data:} We will be using a dataset of 159,571 comments from Wikipedia’s talk page edits which have been labeled by human raters for toxic behavior. The types of toxicity are: \texttt{toxic}, \texttt{severe\_toxic}, \texttt{obscene}, \texttt{threat}, \texttt{insult}, and \texttt{identity\_hate}.
+    \item \textbf{Methodology/Algorithm:} We will first establish the classification baseline with a simple multi-label logistic regression and averaging all word embeddings of a comment. We will then move on to more elaborate methods like: (1) multilayer perceptrons with word embeddings, (2) RNNs/LSTMs with word embeddings, (3) convolutional neural networks (CNN) with word embeddings and/or character embeddings, and (4) attention-based networks \cite{attention}. We plan to utilize existing implementation when available, and to implement our own custom network architectures using TensorFlow.
+    \item \textbf{Related Work:} The earliest work on machine learning-based detection of online harassment can be traced back to Yin \textit{et al.} \cite{yin2009}, where they applied SVM on content, sentiment and contextual features to classify harassment. More recently, a paper by the group that has published the Kaggle challenge \cite{prevwork} focused on binary identification of toxic comments (no fine-grained classification). They found success with relatively simple n-gram NLP methods, and left more complex methods like LSTMs as future work. Last year, a group of students looked at the same dataset and found CNNs with character embeddings to be the most successful algorithm \cite{lastyear}.
+    \item \textbf{Evaluation Plan:} We will plot ROC curves for classification of each class of toxic comment, and will run on a test set with true labels withheld by Kaggle, scored according to mean column-wise ROC AUC, a statistic which can be computed automatically.
+    \item \textbf{Minimal Requirements:}
+    \begin{enumerate}
+      \item \textbf{Number of examples $>$ 10000} \checkmark
+        \item \textbf{Data collection already done?} \checkmark
+        \item \textbf{Feasible task?} \checkmark
+        \item \textbf{Automatic evaluation metric?} \checkmark
+        \item \textbf{NLP required?} \checkmark
+    \end{enumerate}
+    
+\end{enumerate}
+
+\begin{thebibliography}{9}
+\bibitem{attention}
+A. Vaswani, et al. Attention Is All You Need. arXiv:1706.03762.
+
+\bibitem{yin2009}
+D. Yin, Z. Xue, L. Hong, B. Davison, A. Kontostathis, L. Edwards. Detection of Harassment on Web 2.0. In \textit{Proceedings of the Content Analysis in the WEB 2.0 (CAW2.0) Workshop at WWW2009}, 2009
+
+\bibitem{prevwork}
+E. Wulczyn, N Thain, L Dixon. Ex Machina: Personal Attacks Seen at Scale. \textit{Proceedings of the 26th International Conference on World Wide Web}, 2017.
+
+\bibitem{lastyear}
+T. Chu, K. Jue, and M. Wang. Comment Abuse Classification with Deep Learning. In \textit{CS224n Final Project Report}, 2017.
+
+\end{thebibliography}
+
+\end{document}
