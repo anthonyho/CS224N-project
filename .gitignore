@@ -2,3 +2,5 @@
 *.out
 *.aux
 *.log
+*.pyc
+data/glove/glove*txt
