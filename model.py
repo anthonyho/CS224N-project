@@ -1,4 +1,5 @@
 from vocab import get_glove
+import tensorflow as tf
 
 class Model(object):
 
