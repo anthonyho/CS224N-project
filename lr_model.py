@@ -70,6 +70,5 @@ class LogisticRegressionModel(Model):
         list_list_inds = preprocessing.token_list_to_ids(list_list_tokens, self.word2id)
         sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix) 
         feed = self.create_feed_dict(sentence_avgs)
-        y = self.pred
-        classification = sess.run(y, feed_dict=feed)
+        classification = sess.run(self.pred, feed_dict=feed)
         return tf.nn.softmax(classification)
