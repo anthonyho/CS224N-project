@@ -4,3 +4,4 @@
 *.log
 *.pyc
 data/glove/glove*txt
+out/*npy
