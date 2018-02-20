@@ -1,10 +1,10 @@
-#!/usr/bin/env python
 import pandas as pd
 import nltk
 import numpy as np
 
 def load_data(file_name):
-    return pd.read_csv(file_name, encoding='utf-8')
+    data = pd.read_csv(file_name, encoding='utf-8')
+    return data
 
 def tokenize_single(sequence):
     tokens = [token.replace("``", '"').replace("''", '"').lower() for token in nltk.word_tokenize(sequence)]
@@ -27,3 +27,15 @@ def average_sentence_vectors(list_list_inds,emb_matrix):
 
 def filter_labels(df_train, columns):
     return df_train[columns].values.astype('float32')
+
+def softmax(x):
+    if len(x.shape) > 1:
+        x = np.exp(x - np.max(x, axis=1, keepdims=True))
+        x = x / np.sum(x, axis=1, keepdims=True)
+    else:
+        x = np.exp(x - np.max(x))
+        x = x / np.sum(x)
+    return x
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
