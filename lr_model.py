@@ -54,15 +54,22 @@ class LogisticRegressionModel(Model):
         _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
         return loss
 
-    def run_epoch(self, sess, list_list_tokens, array_labels):
-        list_list_inds = preprocessing.token_list_to_ids(list_list_tokens, self.word2id)
-        sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix)
+    def run_epoch(self, sess, sentence_avgs, array_labels):
         loss = self.train_on_batch(sess, sentence_avgs, array_labels)
         return loss
 
     def train(self, sess, list_list_tokens, array_labels):
+        list_list_inds = preprocessing.token_list_to_ids(list_list_tokens, self.word2id)
+        sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix)
         list_loss = []
         for epoch in range(self.config['n_epochs']):
-            list_loss.append(self.run_epoch(sess, list_list_tokens, array_labels))
+            list_loss.append(self.run_epoch(sess, sentence_avgs, array_labels))
         return list_loss
-    
+
+    def predict(self, sess, list_list_tokens):
+        list_list_inds = preprocessing.token_list_to_ids(list_list_tokens, self.word2id)
+        sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix) 
+        feed = self.create_feed_dict(sentence_avgs)
+        y = self.pred
+        classification = sess.run(y, feed_dict=feed)
+        return tf.nn.softmax(classification)

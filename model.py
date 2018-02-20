@@ -11,16 +11,13 @@ class Model(object):
         self.config = config
         self.build()
 
-    def build(self, hyperparams_dict=None):
-        raise NotImplementedError()
-
     def train(self, list_tokens, array_labels):
         raise NotImplementedError()
 
     def save_weights(self, file_path):
         raise NotImplementedError()
 
-    def predict(self, list_tokens):
+    def predict(self, list_list_tokens):
         # saving self.predicted_labels 
         raise NotImplementedError()
 
