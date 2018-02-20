@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 from model import Model
 import tensorflow as tf
 import preprocessing
+import numpy as np
 
 config = {'n_epochs': 10,
           'n_features' : 50,
@@ -39,7 +41,7 @@ class LogisticRegressionModel(Model):
         return pred
 
     def add_loss_op(self, pred):
-        loss = tf.nn.softmax_cross_entropy_with_logits(labels=self.labels_placeholder,
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.labels_placeholder,
                                                        logits=pred)
         loss = tf.reduce_mean(loss)
         return loss
@@ -71,4 +73,31 @@ class LogisticRegressionModel(Model):
         sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix) 
         feed = self.create_feed_dict(sentence_avgs)
         classification = sess.run(self.pred, feed_dict=feed)
-        return tf.nn.softmax(classification)
+        return classification
+
+
+
+def main():
+    out_dir = 'out/'
+    
+    train_data = preprocessing.load_data('data/train.csv')
+    subset_train_data = train_data.head(5000)
+    list_list_tokens = preprocessing.tokenize_df(subset_train_data)
+    array_labels = preprocessing.filter_labels(subset_train_data, ['toxic', 'severe_toxic'])
+    
+    with tf.Graph().as_default() as graph: 
+        model = LogisticRegressionModel(config['n_features'], config)
+        init_op = tf.global_variables_initializer()
+    graph.finalize()
+    
+    with tf.Session(graph=graph) as sess:
+        sess.run(init_op)
+        list_loss = model.train(sess, list_list_tokens, array_labels)
+        y_score = preprocessing.sigmoid(model.predict(sess, list_list_tokens))
+    
+    np.save(out_dir+'y_true.npy', array_labels)
+    np.save(out_dir+'y_score.npy', y_score)
+
+
+if __name__ == '__main__':
+    main()
