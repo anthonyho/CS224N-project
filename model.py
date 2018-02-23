@@ -1,15 +1,40 @@
-from vocab import get_glove
 import tensorflow as tf
+from vocab import get_glove
+
 
 class Model(object):
 
-    def __init__(self, glove_dim, config=None):
-        glove_prefix = 'data/glove/glove.6B.'
-        glove_suffix = 'd.txt'
-        glove_file = glove_prefix+str(glove_dim)+glove_suffix
-        self.emb_matrix, self.word2id, self.id2word = get_glove(glove_file, glove_dim)
+    def __init__(self, config=None, glove_dim=None, glove_data=None):
+        # Load glove data from memory if already loaded
+        if glove_data is not None:
+            self.emb_matrix = glove_data[0]
+            self.word2id = glove_data[1]
+            self.id2word = glove_data[2]
+        # Load glove data from file otherwise
+        elif glove_dim is not None:
+            glove_prefix = 'data/glove/glove.6B.'
+            glove_suffix = 'd.txt'
+            glove_file = glove_prefix+str(glove_dim)+glove_suffix
+            (self.emb_matrix, self.word2id,
+             self.id2word) = get_glove(glove_file, glove_dim)
+        # Load config and build
         self.config = config
         self.build()
+
+    def add_placeholders(self):
+        raise NotImplementedError()
+    
+    def create_feed_dict(self):
+        raise NotImplementedError()
+
+    def add_prediction_op(self):
+        raise NotImplementedError()
+
+    def add_loss_op(self):
+        raise NotImplementedError()
+
+    def add_training_op(self):
+        raise NotImplementedError()
 
     def train(self, list_tokens, array_labels):
         raise NotImplementedError()
@@ -18,7 +43,7 @@ class Model(object):
         raise NotImplementedError()
 
     def predict(self, list_list_tokens):
-        # saving self.predicted_labels 
+        # saving self.predicted_labels
         raise NotImplementedError()
 
     def load_weights(self, file_path):
