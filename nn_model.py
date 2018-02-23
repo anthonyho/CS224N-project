@@ -62,6 +62,7 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def run_epoch(self, sess, sentence_avgs, array_labels):
+        # add minibatch here
         loss = self.train_on_batch(sess, sentence_avgs, array_labels)
         return loss
 
