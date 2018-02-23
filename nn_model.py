@@ -1,23 +1,27 @@
 #!/usr/bin/env python
-from model import Model
+import numpy as np
 import tensorflow as tf
 import preprocessing
-import numpy as np
+from model import Model
+
 
 config = {'n_epochs': 10,
-          'n_features' : 50,
-          'n_classes'  : 2,
+          'n_features': 50,
+          'n_classes': 2,
           'hidden_size': 20,
-          'lr'         : .0005
+          'lr': .0005
           }
 
-class LogisticRegressionModel(Model):
+
+class FeedForwardNeuralNetwork(Model):
 
     def add_placeholders(self):
+        input_shape = (None, self.config['n_features'])
+        labels_shape = (None, self.config['n_classes'])
         self.input_placeholder = tf.placeholder(tf.float32,
-                                                shape=(None, self.config['n_features']))
+                                                shape=input_shape)
         self.labels_placeholder = tf.placeholder(tf.float32,
-                                                 shape=(None, self.config['n_classes']))
+                                                 shape=labels_shape)
 
     def create_feed_dict(self, inputs_batch, labels_batch=None):
         feed_dict = {self.input_placeholder: inputs_batch}
@@ -61,7 +65,7 @@ class LogisticRegressionModel(Model):
         return loss
 
     def train(self, sess, list_list_tokens, array_labels):
-        list_list_inds = preprocessing.token_list_to_ids(list_list_tokens, self.word2id)
+        list_list_inds = preprocessing.tokens_to_ids(list_list_tokens, self.word2id)
         sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix)
         list_loss = []
         for epoch in range(self.config['n_epochs']):
@@ -69,7 +73,7 @@ class LogisticRegressionModel(Model):
         return list_loss
 
     def predict(self, sess, list_list_tokens):
-        list_list_inds = preprocessing.token_list_to_ids(list_list_tokens, self.word2id)
+        list_list_inds = preprocessing.tokens_to_ids(list_list_tokens, self.word2id)
         sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix) 
         feed = self.create_feed_dict(sentence_avgs)
         classification = sess.run(self.pred, feed_dict=feed)
