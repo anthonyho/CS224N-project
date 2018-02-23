@@ -5,3 +5,4 @@
 *.pyc
 data/glove/glove*txt
 out/*npy
+.ipynb_checkpoints/*
