@@ -4,13 +4,13 @@ from vocab import get_glove
 
 class Model(object):
 
-    def __init__(self, config=None, glove_dim=None, glove_data=None):
-        # Load glove data from memory if already loaded
-        if glove_data is not None:
-            self.emb_matrix = glove_data[0]
-            self.word2id = glove_data[1]
-            self.id2word = glove_data[2]
-        # Load glove data from file otherwise
+    def __init__(self, config=None, emb_data=None, glove_dim=None):
+        # Load word embedding data from memory if already loaded
+        if emb_data is not None:
+            self.emb_matrix = emb_data[0]
+            self.word2id = emb_data[1]
+            self.id2word = emb_data[2]
+        # Load glove data from file 
         elif glove_dim is not None:
             glove_prefix = 'data/glove/glove.6B.'
             glove_suffix = 'd.txt'
