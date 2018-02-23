@@ -10,7 +10,7 @@ def load_data(file_name):
     return data
 
 
-def tokenize_single_string(string):
+def _tokenize_single_string(string):
     tokens = [token.replace("``", '"').replace("''", '"').lower()
               for token in nltk.word_tokenize(string)]
     return tokens
@@ -19,7 +19,7 @@ def tokenize_single_string(string):
 def tokenize_df(df, column='comment_text'):
     list_list_tokens = []
     for index, item in df[column].iteritems():
-        list_list_tokens.append(tokenize_single_string(item))
+        list_list_tokens.append(_tokenize_single_string(item))
     return list_list_tokens
 
 
