@@ -9,7 +9,8 @@ config = {'n_epochs': 10,
           'n_features': 50,
           'n_classes': 2,
           'hidden_size': 20,
-          'lr': .0005
+          'lr': .0005,
+          'optimizer': tf.train.AdamOptimizer
           }
 
 
@@ -51,7 +52,7 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def add_training_op(self, loss):
-        opt = tf.train.AdamOptimizer(learning_rate=self.config['lr'])
+        opt = self.config['optimizer'](learning_rate=self.config['lr'])
         train_op = opt.minimize(loss)
         return train_op
 
