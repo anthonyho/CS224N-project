@@ -15,17 +15,17 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def minibatch(batch_size, inputs_data, labels_data=None, shuffle=True):
-    n_data = len(inputs_data)
+def minibatch(batch_size, inputs, labels=None, shuffle=True):
+    n_data = len(inputs)
     ind = np.arange(n_data)
     if shuffle:
         np.random.shuffle(ind)
     for i in np.arange(0, n_data, batch_size):
-        inputs_batch =  _get_items(inputs_data, ind[i:i+batch_size])
-        if labels_data is None:
+        inputs_batch =  _get_items(inputs, ind[i:i+batch_size])
+        if labels is None:
             yield inputs_batch
         else:
-            labels_batch = _get_items(labels_data, ind[i:i+batch_size])
+            labels_batch = _get_items(labels, ind[i:i+batch_size])
             yield (inputs_batch, labels_batch)
 
 
