@@ -6,17 +6,17 @@ import utils
 from model import Model
 
 
-config = {'n_epochs': 10,
-          'n_features': 50,
-          'n_labels': 2,
-          'n_layers': 1,
-          'hidden_sizes': 20,
-          'lr': .0005,
-          'batch_size': 1000,
-          'activation': tf.nn.relu,
-          'optimizer': tf.train.AdamOptimizer,
-          'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
-          }
+example_config = {'n_epochs': 500, # number of iterations
+                  'n_features': 50, # dimension of the inputs
+                  'n_labels': 2, # number of labels to predict
+                  'n_layers': 1, # number of hidden layers
+                  'hidden_sizes': 20, # size of hidden layers; int or list of int
+                  'lr': .0005, # learning rate
+                  'batch_size': 1000, # number of training examples in each minibatch
+                  'activation': tf.nn.relu,
+                  'optimizer': tf.train.AdamOptimizer,
+                  'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
+                  }
 
 
 class FeedForwardNeuralNetwork(Model):
