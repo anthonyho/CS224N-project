@@ -16,6 +16,9 @@ def sigmoid(x):
 
 
 def minibatch(batch_size, inputs, labels=None, shuffle=True):
+    if labels is not None:
+        assert len(inputs) == len(labels), \
+            'Inputs and labels must have equal dimensions!'
     n_data = len(inputs)
     ind = np.arange(n_data)
     if shuffle:

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import nltk
+import utils
 
 
 id_unknown = 1
@@ -38,3 +39,18 @@ def average_sentence_vectors(list_list_inds, emb_matrix):
 
 def filter_labels(df_train, columns):
     return df_train[columns].values.astype('float32')
+
+
+def split_train_dev(inputs, labels, fraction_dev=0.3, shuffle=True):
+    assert len(inputs) == len(labels), \
+        'Inputs and labels must have equal dimensions!'
+    n_data = len(inputs)
+    ind = np.arange(n_data)
+    if shuffle:
+        np.random.shuffle(ind)
+    boundary = int((1 - fraction_dev) * n_data)
+    inputs_train = utils._get_items(inputs, ind[0:boundary])
+    labels_train = utils._get_items(labels, ind[0:boundary])
+    inputs_dev = utils._get_items(inputs, ind[boundary:])
+    labels_dev = utils._get_items(labels, ind[boundary:])
+    return inputs_train, labels_train, inputs_dev, labels_dev
