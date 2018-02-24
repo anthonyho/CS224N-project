@@ -59,6 +59,15 @@ def evaluate(y_true, y_score, metric='roc', average=True):
 
 
 def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
+    '''Plot metric curve for a single label
+
+    Inputs:
+    - y_true: np.array of shape (n_samples, 1)
+    - y_score: np.array of shape (n_samples, 1)
+    - metric: 'roc' or 'prc'
+    - ax: axes to plot in
+    - kwargs: additional keyword arguments to pass to plt.plot / plt.step
+    '''
     if ax is None:
         ax = plt.gca()
 
