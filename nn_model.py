@@ -104,7 +104,8 @@ class FeedForwardNeuralNetwork(Model):
         inputs = self._transform_inputs(tokens)
         feed = self._create_feed_dict(inputs)
         pred = sess.run(self.pred, feed_dict=feed)
-        return utils.sigmoid(pred)
+        y_score = utils.sigmoid(pred)
+        return y_score
 
 
 def main():
