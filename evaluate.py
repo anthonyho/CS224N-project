@@ -8,36 +8,74 @@ sns.set(style="white")
 sns.set_palette("Paired", 12)
 colors = sns.color_palette("Paired", 12)
 
-metric_full = {'roc': 'ROC AUC',
+metric_long = {'roc': 'ROC AUC',
                'prc': 'average precision'}
 
+datasets = ['train', 'dev', 'test']
 
-def evaluate_all(y_true, y_score,
-                 metrics=['roc', 'prc'], names=None, plot=False):
+dataset_linestyles = {'train': '-',
+                      'dev': '--',
+                      'test': ':'}
 
-    n_columns = y_true.shape[1]
 
-    if not isinstance(metrics, list):
-        metrics = [metrics]
+def evaluate_full(y_dict, metric='roc', names=None,
+                  print_msg=True, plot=True):
+    '''
+    Detailed evaluation of multilabel classification
 
+    Inputs:
+    - y_dict: dict with keys in {'train', 'dev', 'test'} and
+              values = (y_true, y_score) where y_true and y_score
+              are np.array of shape (n_samples, n_labels)
+    - metric: 'roc' or 'prc'
+    - names: list of names for each label (e.g. ['toxic', 'obscene', 'insult'])
+    - print_msg: bool to print message
+    - plot: bool to plot ROC/PRC
+
+    Return:
+    dict['average'|label]['train'|'dev'|'test']
+    '''
+    # Get datasets in y_dict
+    curr_datasets = [dataset for dataset in datasets if dataset in y_dict]
+
+    # Create default names if not provided
+    n_columns = y_dict[curr_datasets[0]][0].shape[1]
     if names is None:
         names = ['column '+str(i+1) for i in range(n_columns)]
 
+    # Evaluate all results
     results = {}
-    for metric in metrics:
-        results[metric] = {}
-        scores = evaluate(y_true, y_score, metric=metric, average=False)
-        for name, score in zip(names, scores):
-            results[metric][name] = score
-            print "{} of {} = {:.4f}".format(metric_full[metric], name, score)
-        results[metric]['average'] = evaluate(y_true, y_score,
-                                              metric=metric, average=True)
-        print "Mean column-wise {} = {:.4f}".format(metric_full[metric], score)
+    results['average'] = {}
+    for dataset in curr_datasets:
+        y_true = y_dict[dataset][0]
+        y_score = y_dict[dataset][1]
+        perf_score = evaluate(y_true, y_score, metric=metric, average=True)
+        results['average'][dataset] = perf_score
+        if print_msg:
+            message = "Mean column-wise {} - {} = {:.4f}"
+            print message.format(metric_long[metric], dataset, perf_score)
+    for i, name in enumerate(names):
+        results[name] = {}
+        for dataset in curr_datasets:
+            y_true = y_dict[dataset][0][:, i]
+            y_score = y_dict[dataset][1][:, i]
+            perf_score = evaluate(y_true, y_score, metric=metric)
+            results[name][dataset] = perf_score
+            if print_msg:
+                message = "{} of {} - {} = {:.4f}"
+                print message.format(metric_long[metric],
+                                     name, dataset, perf_score)
+            if plot:
+                label = name + ' - ' + dataset
+                color = colors[2 * i + 1]
+                plot_metric_curve(y_true, y_score, metric=metric,
+                                  label=label, color=color,
+                                  linestyle=dataset_linestyles[dataset])
     return results
 
 
 def evaluate(y_true, y_score, metric='roc', average=True):
-    '''Function to evaluate performance
+    '''Evaluate performance of multilabel classification
 
     Inputs:
     - y_true: np.array of shape (n_samples, n_labels)
@@ -86,4 +124,4 @@ def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
     utils.setplotproperties(ax=ax, equal=True,
                             xlabel=xlabel, ylabel=ylabel,
                             legend=('label' in kwargs),
-                            legendloc=(1.04, 0.8))
+                            legendloc=(1.04, 0))

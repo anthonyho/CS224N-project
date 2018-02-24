@@ -8,13 +8,13 @@ import evaluate
 import vocab
 
 
-example_config = {'n_epochs': 500, # number of iterations
-                  'n_features': 50, # dimension of the inputs
-                  'n_labels': 3, # number of labels to predict
-                  'n_layers': 2, # number of hidden layers
-                  'hidden_sizes': [20, 20], # size of hidden layers; int or list of int
-                  'lr': .0005, # learning rate
-                  'batch_size': 1000, # number of training examples in each minibatch
+example_config = {'n_epochs': 500,  # number of iterations
+                  'n_features': 50,  # dimension of the inputs
+                  'n_labels': 3,  # number of labels to predict
+                  'n_layers': 2,  # number of hidden layers
+                  'hidden_sizes': [20, 20],  # size of hidden layers; int or list of int
+                  'lr': .0005,  # learning rate
+                  'batch_size': 1000,  # number of training examples in each minibatch
                   'activation': tf.nn.relu,
                   'optimizer': tf.train.AdamOptimizer,
                   'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
