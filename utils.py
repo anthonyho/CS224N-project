@@ -21,7 +21,7 @@ def minibatch(batch_size, inputs, labels=None, shuffle=True):
     if shuffle:
         np.random.shuffle(ind)
     for i in np.arange(0, n_data, batch_size):
-        inputs_batch =  _get_items(inputs, ind[i:i+batch_size])
+        inputs_batch = _get_items(inputs, ind[i:i+batch_size])
         if labels is None:
             yield inputs_batch
         else:

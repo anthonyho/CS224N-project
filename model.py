@@ -10,7 +10,7 @@ class Model(object):
             self.emb_matrix = emb_data[0]
             self.word2id = emb_data[1]
             self.id2word = emb_data[2]
-        # Load glove data from file 
+        # Load glove data from file
         elif glove_dim is not None:
             glove_prefix = 'data/glove/glove.6B.'
             glove_suffix = 'd.txt'
@@ -23,7 +23,7 @@ class Model(object):
 
     def _add_placeholders(self):
         raise NotImplementedError()
-    
+
     def _create_feed_dict(self, inputs_batch, labels_batch=None):
         raise NotImplementedError()
 

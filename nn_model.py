@@ -9,10 +9,13 @@ from model import Model
 config = {'n_epochs': 10,
           'n_features': 50,
           'n_classes': 2,
-          'hidden_size': 20,
+          'n_layers': 1,
+          'hidden_sizes': 20,
           'lr': .0005,
           'batch_size': 1000,
-          'optimizer': tf.train.AdamOptimizer
+          'activation': tf.nn.relu,
+          'optimizer': tf.train.AdamOptimizer,
+          'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
           }
 
 
@@ -33,18 +36,32 @@ class FeedForwardNeuralNetwork(Model):
         return feed_dict
 
     def _add_prediction_op(self):
-        W1 = tf.get_variable('W1',
-                             shape=[self.config['n_features'], self.config['hidden_size']],
-                             initializer=tf.contrib.layers.xavier_initializer(uniform=False))
-        b1 = tf.Variable(tf.zeros((1, self.config['hidden_size'])),
-                         dtype=tf.float32)
-        h = tf.nn.relu(tf.matmul(self.input_placeholder, W1) + b1)
-        W2 = tf.get_variable('W2',
-                             shape=[self.config['hidden_size'], self.config['n_classes']],
-                             initializer=tf.contrib.layers.xavier_initializer(uniform=False))
-        b2 = tf.Variable(initial_value=tf.zeros((1, self.config['n_classes'])),
-                         dtype=tf.float32)
-        pred = tf.matmul(h, W2) + b2
+        try:
+            sizes = list(self.config['hidden_sizes'])
+        except TypeError:
+            sizes = [self.config['hidden_sizes']] * self.config['n_layers']
+        assert len(sizes) == self.config['n_layers']
+        sizes = [self.config['n_features']] + sizes + [self.config['n_classes']]
+
+        activation = self.config['activation']
+        initializer = self.config['initializer']
+
+        h = self.input_placeholder
+
+        for i in range(len(sizes) - 1):
+            with tf.variable_scope('layer'+str(i)):
+                W_shape = (sizes[i], sizes[i + 1])
+                b_shape = (1, sizes[i + 1])
+                W = tf.get_variable('W', shape=W_shape,
+                                    initializer=initializer)
+                b = tf.get_variable('b', shape=b_shape,
+                                    initializer=initializer)
+                if i == len(sizes) - 2:
+                    z = tf.matmul(h, W) + b
+                else:
+                    z = tf.matmul(h, W) + b
+                    h = activation(z)
+        pred = z
         return pred
 
     def _add_loss_op(self, pred):
@@ -64,7 +81,8 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def _run_epoch(self, sess, inputs, labels, shuffle):
-        minibatches = utils.minibatch(self.config['batch_size'], inputs, labels, shuffle)
+        minibatches = utils.minibatch(self.config['batch_size'],
+                                      inputs, labels, shuffle)
         loss = 0
         for i, (inputs_batch, labels_batch) in enumerate(minibatches):
             loss += self._train_on_batch(sess, inputs_batch, labels_batch)
