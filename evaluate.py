@@ -1,6 +1,12 @@
 from sklearn.metrics import roc_curve, roc_auc_score, \
     precision_recall_curve, average_precision_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+import utils
 
+sns.set(style="white")
+sns.set_palette("Paired", 12)
+colors = sns.color_palette("Paired", 12)
 
 metric_full = {'roc': 'ROC AUC',
                'prc': 'average precision'}
@@ -31,13 +37,44 @@ def evaluate_all(y_true, y_score,
 
 
 def evaluate(y_true, y_score, metric='roc', average=True):
+    '''Function to evaluate performance
+
+    Inputs:
+    - y_true: np.array of shape (n_samples, n_labels)
+    - y_score: np.array of shape (n_samples, n_labels)
+    - metric: 'roc' or 'prc'
+    - average: return mean column-wise metric if true,
+               return np.array of shape (n_labels) otherwise
+    '''
     if average:
         if metric == 'roc':
             return roc_auc_score(y_true, y_score, average='macro')
-        if metric == 'prc':
+        elif metric == 'prc':
             return average_precision_score(y_true, y_score, average='macro')
     else:
         if metric == 'roc':
             return roc_auc_score(y_true, y_score, average=None)
-        if metric == 'prc':
+        elif metric == 'prc':
             return average_precision_score(y_true, y_score, average=None)
+
+
+def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
+    if ax is None:
+        ax = plt.gca()
+
+    if metric == 'roc':
+        fpr, tpr, _ = roc_curve(y_true, y_score)
+        ax.plot(fpr, tpr, linewidth=3, **kwargs)
+        xlabel = 'False positive rate'
+        ylabel = 'True positive rate'
+
+    elif metric == 'prc':
+        precision, recall, _ = precision_recall_curve(y_true, y_score)
+        ax.step(recall, precision, linewidth=3, **kwargs)
+        xlabel = 'Recall'
+        ylabel = 'Precision'
+
+    utils.setplotproperties(ax=ax, equal=True,
+                            xlabel=xlabel, ylabel=ylabel,
+                            legend=('label' in kwargs),
+                            legendloc=(1.04, 0.8))
