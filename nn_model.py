@@ -4,13 +4,15 @@ import tensorflow as tf
 import preprocessing
 import utils
 from model import Model
+import evaluate
+import vocab
 
 
 example_config = {'n_epochs': 500, # number of iterations
                   'n_features': 50, # dimension of the inputs
-                  'n_labels': 2, # number of labels to predict
-                  'n_layers': 1, # number of hidden layers
-                  'hidden_sizes': 20, # size of hidden layers; int or list of int
+                  'n_labels': 3, # number of labels to predict
+                  'n_layers': 2, # number of hidden layers
+                  'hidden_sizes': [20, 20], # size of hidden layers; int or list of int
                   'lr': .0005, # learning rate
                   'batch_size': 1000, # number of training examples in each minibatch
                   'activation': tf.nn.relu,
@@ -110,24 +112,42 @@ class FeedForwardNeuralNetwork(Model):
 
 def main():
     out_dir = 'out/'
-    
-    train_data = preprocessing.load_data('data/train.csv')
-    subset_train_data = train_data.head(5000)
-    list_list_tokens = preprocessing.tokenize_df(subset_train_data)
-    array_labels = preprocessing.filter_labels(subset_train_data, ['toxic', 'severe_toxic'])
-    
+
+    glove_file = 'data/glove/glove.6B.50d.txt'
+    glove_dim = 50
+    emb_data = vocab.get_glove(glove_file, glove_dim)
+
+    data = preprocessing.load_data('data/train.csv')
+    subset_data = data.head(10000)
+    inputs = preprocessing.tokenize_df(subset_data)
+    col = ['toxic', 'obscene', 'insult']
+    labels = preprocessing.filter_labels(subset_data, col)
+    inputs_train, labels_train, inputs_dev, labels_dev = preprocessing.split_train_dev(inputs, labels)
+
+    tf.reset_default_graph()
     with tf.Graph().as_default() as graph: 
-        model = LogisticRegressionModel(config['n_features'], config)
+        obj = FeedForwardNeuralNetwork(example_config, emb_data=emb_data)
         init_op = tf.global_variables_initializer()
     graph.finalize()
-    
+
     with tf.Session(graph=graph) as sess:
         sess.run(init_op)
-        list_loss = model.train(sess, list_list_tokens, array_labels)
-        y_score = preprocessing.sigmoid(model.predict(sess, list_list_tokens))
+        list_loss = obj.train(sess, inputs_train, labels_train)
+        y_score_train = obj.predict(sess, inputs_train)
+        y_score_dev = obj.predict(sess, inputs_dev)
+
+    results_train = evaluate.evaluate(labels_train, y_score_train, names=col)
+    results_dev = evaluate.evaluate(labels_dev, y_score_dev, names=col)
     
-    np.save(out_dir+'y_true.npy', array_labels)
-    np.save(out_dir+'y_score.npy', y_score)
+    print "Results on train set:\n"
+    print results_train
+    print "Results on dev set:\n"
+    print results_dev
+
+    np.save(out_dir+'y_true_train.npy', labels_train)
+    np.save(out_dir+'y_score_train.npy', y_score_train)
+    np.save(out_dir+'y_true_dev.npy', labels_dev)
+    np.save(out_dir+'y_score_dev.npy', y_score_dev)
 
 
 if __name__ == '__main__':
