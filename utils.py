@@ -17,6 +17,19 @@ def sigmoid(x):
 
 
 def minibatch(batch_size, inputs, labels=None, shuffle=True):
+    '''
+    Return generator for minibatching
+
+    Inputs:
+    - batch_size: int
+    - inputs: list or numpy array (to be batched across rows)
+    - labels: list or numpy array (to be batched across rows)
+    - shuffle: bool to shuffle indices before minibatching
+
+    Return:
+    - generator of inputs_batch if labels=None
+    - generator of (inputs_batch, labels_batch) if otherwise
+    '''
     if labels is not None:
         assert len(inputs) == len(labels), \
             'Inputs and labels must have equal dimensions!'
@@ -34,6 +47,8 @@ def minibatch(batch_size, inputs, labels=None, shuffle=True):
 
 
 def _get_items(data, ind):
+    '''Helper function to access items from a list of indices
+    depending on data type'''
     if isinstance(data, list):
         return [data[i] for i in ind]
     else:
