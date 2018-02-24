@@ -1,5 +1,5 @@
 import tensorflow as tf
-from vocab import get_glove
+from preprocessing import get_glove
 
 
 class Model(object):
@@ -12,11 +12,7 @@ class Model(object):
             self.id2word = emb_data[2]
         # Load glove data from file
         elif glove_dim is not None:
-            glove_prefix = 'data/glove/glove.6B.'
-            glove_suffix = 'd.txt'
-            glove_file = glove_prefix+str(glove_dim)+glove_suffix
-            (self.emb_matrix, self.word2id,
-             self.id2word) = get_glove(glove_file, glove_dim)
+            self.emb_matrix, self.word2id, self.id2word = get_glove(glove_dim)
         # Load config and build
         self.config = config
         self.build()

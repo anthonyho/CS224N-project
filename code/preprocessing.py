@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import nltk
 import utils
+import vocab
 
 
 id_unknown = 1
@@ -39,6 +40,13 @@ def average_sentence_vectors(list_list_inds, emb_matrix):
 
 def filter_labels(df_train, columns):
     return df_train[columns].values.astype('float32')
+
+
+def get_glove(glove_dim):
+    glove_prefix = '../data/glove/glove.6B.'
+    glove_suffix = 'd.txt'
+    glove_file = glove_prefix+str(glove_dim)+glove_suffix
+    return vocab.get_glove(glove_file, glove_dim)
 
 
 def split_train_dev(inputs, labels, fraction_dev=0.3, shuffle=True):
