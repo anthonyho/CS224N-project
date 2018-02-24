@@ -24,7 +24,7 @@ def minibatch(batch_size, inputs, labels=None, shuffle=True):
     - batch_size: int
     - inputs: list or numpy array (to be batched across rows)
     - labels: list or numpy array (to be batched across rows)
-    - shuffle: bool to shuffle indices before minibatching
+    - shuffle: bool to randomly shuffle data before minibatching
 
     Return:
     - generator of inputs_batch if labels=None

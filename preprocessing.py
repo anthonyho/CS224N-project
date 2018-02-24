@@ -42,8 +42,17 @@ def filter_labels(df_train, columns):
 
 
 def split_train_dev(inputs, labels, fraction_dev=0.3, shuffle=True):
+    '''
+    Split data into train and dev sets
+
+    Inputs:
+    - inputs: list or numpy array (to be splitted across rows)
+    - labels: list or numpy array (to be splitted across rows)
+    - fraction_dev: fraction of data to be held out for dev set
+    - shuffle: bool to randomly shuffle data before splitting
+    '''
     assert len(inputs) == len(labels), \
-        'Inputs and labels must have equal dimensions!'
+        "Inputs and labels must have equal dimensions!"
     n_data = len(inputs)
     ind = np.arange(n_data)
     if shuffle:
