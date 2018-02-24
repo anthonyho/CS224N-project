@@ -2,6 +2,7 @@
 import numpy as np
 import tensorflow as tf
 import preprocessing
+import utils
 from model import Model
 
 
@@ -10,13 +11,14 @@ config = {'n_epochs': 10,
           'n_classes': 2,
           'hidden_size': 20,
           'lr': .0005,
+          'batch_size': 1000,
           'optimizer': tf.train.AdamOptimizer
           }
 
 
 class FeedForwardNeuralNetwork(Model):
 
-    def add_placeholders(self):
+    def _add_placeholders(self):
         input_shape = (None, self.config['n_features'])
         labels_shape = (None, self.config['n_classes'])
         self.input_placeholder = tf.placeholder(tf.float32,
@@ -24,13 +26,13 @@ class FeedForwardNeuralNetwork(Model):
         self.labels_placeholder = tf.placeholder(tf.float32,
                                                  shape=labels_shape)
 
-    def create_feed_dict(self, inputs_batch, labels_batch=None):
+    def _create_feed_dict(self, inputs_batch, labels_batch=None):
         feed_dict = {self.input_placeholder: inputs_batch}
         if labels_batch is not None:
             feed_dict[self.labels_placeholder] = labels_batch
         return feed_dict
 
-    def add_prediction_op(self):
+    def _add_prediction_op(self):
         W1 = tf.get_variable('W1',
                              shape=[self.config['n_features'], self.config['hidden_size']],
                              initializer=tf.contrib.layers.xavier_initializer(uniform=False))
@@ -45,42 +47,46 @@ class FeedForwardNeuralNetwork(Model):
         pred = tf.matmul(h, W2) + b2
         return pred
 
-    def add_loss_op(self, pred):
+    def _add_loss_op(self, pred):
         loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=self.labels_placeholder,
                                                        logits=pred)
         loss = tf.reduce_mean(loss)
         return loss
 
-    def add_training_op(self, loss):
+    def _add_training_op(self, loss):
         opt = self.config['optimizer'](learning_rate=self.config['lr'])
         train_op = opt.minimize(loss)
         return train_op
 
-    def train_on_batch(self, sess, inputs_batch, labels_batch):
-        feed = self.create_feed_dict(inputs_batch, labels_batch=labels_batch)
+    def _train_on_batch(self, sess, inputs_batch, labels_batch):
+        feed = self._create_feed_dict(inputs_batch, labels_batch)
         _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
         return loss
 
-    def run_epoch(self, sess, sentence_avgs, array_labels):
-        # add minibatch here
-        loss = self.train_on_batch(sess, sentence_avgs, array_labels)
+    def _run_epoch(self, sess, inputs, labels, shuffle):
+        minibatches = utils.minibatch(self.config['batch_size'], inputs, labels, shuffle)
+        loss = 0
+        for i, (inputs_batch, labels_batch) in enumerate(minibatches):
+            loss += self._train_on_batch(sess, inputs_batch, labels_batch)
+        loss /= (i + 1)
         return loss
 
-    def train(self, sess, list_list_tokens, array_labels):
-        list_list_inds = preprocessing.tokens_to_ids(list_list_tokens, self.word2id)
-        sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix)
+    def _transform_inputs(self, tokens):
+        inds = preprocessing.tokens_to_ids(tokens, self.word2id)
+        return preprocessing.average_sentence_vectors(inds, self.emb_matrix)
+
+    def train(self, sess, tokens, labels, shuffle=True):
+        inputs = self._transform_inputs(tokens)
         list_loss = []
         for epoch in range(self.config['n_epochs']):
-            list_loss.append(self.run_epoch(sess, sentence_avgs, array_labels))
+            list_loss.append(self._run_epoch(sess, inputs, labels, shuffle))
         return list_loss
 
-    def predict(self, sess, list_list_tokens):
-        list_list_inds = preprocessing.tokens_to_ids(list_list_tokens, self.word2id)
-        sentence_avgs = preprocessing.average_sentence_vectors(list_list_inds, self.emb_matrix) 
-        feed = self.create_feed_dict(sentence_avgs)
-        classification = sess.run(self.pred, feed_dict=feed)
-        return classification
-
+    def predict(self, sess, tokens):
+        inputs = self._transform_inputs(tokens)
+        feed = self._create_feed_dict(inputs)
+        pred = sess.run(self.pred, feed_dict=feed)
+        return utils.sigmoid(pred)
 
 
 def main():

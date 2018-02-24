@@ -21,28 +21,37 @@ class Model(object):
         self.config = config
         self.build()
 
-    def add_placeholders(self):
+    def _add_placeholders(self):
         raise NotImplementedError()
     
-    def create_feed_dict(self):
+    def _create_feed_dict(self, inputs_batch, labels_batch=None):
         raise NotImplementedError()
 
-    def add_prediction_op(self):
+    def _add_prediction_op(self):
         raise NotImplementedError()
 
-    def add_loss_op(self):
+    def _add_loss_op(self, pred):
         raise NotImplementedError()
 
-    def add_training_op(self):
+    def _add_training_op(self, loss):
         raise NotImplementedError()
 
-    def train(self, list_tokens, array_labels):
+    def _train_on_batch(self, sess, inputs_batch, labels_batch):
+        raise NotImplementedError()
+
+    def _run_epoch(self, sess, inputs, labels):
+        raise NotImplementedError()
+
+    def _transform_inputs(self, tokens):
+        raise NotImplementedError()
+
+    def train(self, tokens, labels):
         raise NotImplementedError()
 
     def save_weights(self, file_path):
         raise NotImplementedError()
 
-    def predict(self, list_list_tokens):
+    def predict(self, tokens):
         # saving self.predicted_labels
         raise NotImplementedError()
 
@@ -54,7 +63,7 @@ class Model(object):
         raise NotImplementedError()
 
     def build(self):
-        self.add_placeholders()
-        self.pred = self.add_prediction_op()
-        self.loss = self.add_loss_op(self.pred)
-        self.train_op = self.add_training_op(self.loss)
+        self._add_placeholders()
+        self.pred = self._add_prediction_op()
+        self.loss = self._add_loss_op(self.pred)
+        self.train_op = self._add_training_op(self.loss)
