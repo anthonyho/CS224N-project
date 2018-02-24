@@ -8,7 +8,7 @@ from model import Model
 
 config = {'n_epochs': 10,
           'n_features': 50,
-          'n_classes': 2,
+          'n_labels': 2,
           'n_layers': 1,
           'hidden_sizes': 20,
           'lr': .0005,
@@ -23,7 +23,7 @@ class FeedForwardNeuralNetwork(Model):
 
     def _add_placeholders(self):
         input_shape = (None, self.config['n_features'])
-        labels_shape = (None, self.config['n_classes'])
+        labels_shape = (None, self.config['n_labels'])
         self.input_placeholder = tf.placeholder(tf.float32,
                                                 shape=input_shape)
         self.labels_placeholder = tf.placeholder(tf.float32,
@@ -41,7 +41,7 @@ class FeedForwardNeuralNetwork(Model):
         except TypeError:
             sizes = [self.config['hidden_sizes']] * self.config['n_layers']
         assert len(sizes) == self.config['n_layers']
-        sizes = [self.config['n_features']] + sizes + [self.config['n_classes']]
+        sizes = [self.config['n_features']] + sizes + [self.config['n_labels']]
 
         activation = self.config['activation']
         initializer = self.config['initializer']
