@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import pandas as pd
 import nltk
@@ -11,6 +12,12 @@ id_unknown = 1
 def load_data(file_name):
     data = pd.read_csv(file_name, encoding='utf-8')
     return data
+
+
+def load_tokenized_comments(file_name):
+    with open(file_name, 'rb') as f:
+        tokenized_comments = pickle.load(f)
+    return tokenized_comments
 
 
 def _tokenize_single_string(string):
