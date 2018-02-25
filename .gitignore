@@ -6,3 +6,4 @@
 data/glove/glove*txt
 out/*npy
 .ipynb_checkpoints/*
+code/.ipynb_checkpoints/*
