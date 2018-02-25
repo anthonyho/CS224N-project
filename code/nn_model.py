@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-import preprocessing
+import preprocess
 import utils
 from model import Model
 
@@ -89,8 +89,8 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def _transform_inputs(self, tokens):
-        inds = preprocessing.tokens_to_ids(tokens, self.word2id)
-        return preprocessing.average_sentence_vectors(inds, self.emb_matrix)
+        inds = preprocess.tokens_to_ids(tokens, self.word2id)
+        return preprocess.average_sentence_vectors(inds, self.emb_matrix)
 
     def train(self, sess, tokens, labels, shuffle=True):
         inputs = self._transform_inputs(tokens)

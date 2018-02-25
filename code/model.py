@@ -1,5 +1,5 @@
 import tensorflow as tf
-from preprocessing import get_glove
+from preprocess import get_glove
 
 
 class Model(object):
