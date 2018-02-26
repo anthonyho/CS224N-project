@@ -56,14 +56,14 @@ def load_and_process(config, data_file, tokenized_comments_file=None, debug=Fals
     return (inputs_train, labels_train, inputs_dev, labels_dev), emb_data
 
 
-def run(config, data, emb_data):
+def run(config, data, emb_data, debug=False):
 
     # Unpack data
     (inputs_train, labels_train, inputs_dev, labels_dev) = data
 
     # Initialize graph
     tf.reset_default_graph()
-    with tf.Graph().as_default() as graph: 
+    with tf.Graph().as_default() as graph:
         obj = nn_model.FeedForwardNeuralNetwork(config, emb_data=emb_data)
         init_op = tf.global_variables_initializer()
     graph.finalize()
@@ -81,6 +81,8 @@ def run(config, data, emb_data):
 
     # Evaluate, plot and save
     file_prefix = os.path.join(out_dir, config['exp_name'] + '_')
+    if debug:
+        file_prefix += 'debug_'
     evaluate.plot_loss(list_loss, fig_path=file_prefix+'loss')
     results_roc = evaluate.evaluate_full(y_dict, names=config['label_names'],
                                          metric='roc', fig_path=file_prefix+'roc')
@@ -89,5 +91,6 @@ def run(config, data, emb_data):
 
 
 if __name__ == '__main__':
-    data, emb_data = load_and_process(config, data_file, tokenized_comments_file, debug=True)
-    run(config, data, emb_data)
+    debug = True
+    data, emb_data = load_and_process(config, data_file, tokenized_comments_file, debug=debug)
+    run(config, data, emb_data, debug=debug)
