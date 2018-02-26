@@ -9,7 +9,7 @@ import evaluate
 import nn_model
 
 
-config = {'exp_name': 'ff_2_50',
+config = {'exp_name': 'ff_l2_f50',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
           'n_epochs': 500,  # number of iterations
           'n_features': 50,  # dimension of the inputs
@@ -26,6 +26,7 @@ config = {'exp_name': 'ff_2_50',
 data_file = '../data/train.csv'
 tokenized_comments_file = '../data/train_comments.p'
 out_dir = 'out/'
+
 
 def load_and_process(config, data_file, tokenized_comments_file=None, debug=False):
 
@@ -77,8 +78,11 @@ def run(config, data, emb_data):
     y_dict = {'train': (labels_train, y_score_train),
               'dev': (labels_dev, y_score_dev)}
 
-    # Evaluate and save
+    # Evaluate, plot and save
     file_prefix = os.path.join(out_dir, config['exp_name'] + '_')
+    if debug:
+        file_prefix += 'debug_'
+    evaluate.plot_loss(list_loss, fig_path=file_prefix+'loss')
     results_roc = evaluate.evaluate_full(y_dict, names=config['label_names'],
                                          metric='roc', fig_path=file_prefix+'roc')
     results_prc = evaluate.evaluate_full(y_dict, names=config['label_names'],
