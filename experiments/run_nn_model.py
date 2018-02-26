@@ -50,7 +50,8 @@ def load_and_process(config, data_file, tokenized_comments_file=None, debug=Fals
     labels = preprocess.filter_labels(data, config['label_names'])
 
     # Split to train and dev sets
-    inputs_train, labels_train, inputs_dev, labels_dev = preprocess.split_train_dev(inputs, labels)
+    inputs_train, labels_train, inputs_dev, labels_dev = preprocess.split_train_dev(inputs, labels,
+                                                                                    fraction_dev=0.3)
 
     return (inputs_train, labels_train, inputs_dev, labels_dev), emb_data
 
@@ -80,8 +81,6 @@ def run(config, data, emb_data):
 
     # Evaluate, plot and save
     file_prefix = os.path.join(out_dir, config['exp_name'] + '_')
-    if debug:
-        file_prefix += 'debug_'
     evaluate.plot_loss(list_loss, fig_path=file_prefix+'loss')
     results_roc = evaluate.evaluate_full(y_dict, names=config['label_names'],
                                          metric='roc', fig_path=file_prefix+'roc')
