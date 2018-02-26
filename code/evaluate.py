@@ -137,3 +137,21 @@ def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
                             xlabel=xlabel, ylabel=ylabel,
                             legend=('label' in kwargs),
                             legendloc=(1.04, 0))
+
+
+def plot_loss(list_loss, fig_path=None):
+    '''
+    Plot loss over epoch
+
+    Inputs:
+    - fig_path: file path to save the figure (no extension)
+    '''
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.plot(list_loss, linewidth=3, color=colors[3])
+    utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss')
+
+    if fig_path:
+        plt.savefig(fig_path+'.png', bbox_inches='tight')
+        plt.savefig(fig_path+'.eps', bbox_inches='tight')
