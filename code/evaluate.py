@@ -54,6 +54,9 @@ def evaluate_full(y_dict, metric='roc', names=None,
         if print_msg:
             message = "Mean column-wise {} - {} = {:.4f}"
             print message.format(metric_long[metric], dataset, perf_score)
+    if plot:
+        fig = plt.figure(figsize=(7, 6))
+        ax = fig.add_subplot(111)
     for i, name in enumerate(names):
         results[name] = {}
         for dataset in curr_datasets:
@@ -68,7 +71,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
             if plot:
                 label = name + ' - ' + dataset
                 color = colors[2 * i + 1]
-                plot_metric_curve(y_true, y_score, metric=metric,
+                plot_metric_curve(y_true, y_score, metric=metric, ax=ax,
                                   label=label, color=color,
                                   linestyle=dataset_linestyles[dataset])
     return results
