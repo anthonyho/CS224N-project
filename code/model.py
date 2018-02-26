@@ -44,18 +44,14 @@ class Model(object):
     def train(self, tokens, labels):
         raise NotImplementedError()
 
-    def save_weights(self, file_path):
-        raise NotImplementedError()
-
     def predict(self, tokens):
         # saving self.predicted_labels
         raise NotImplementedError()
 
-    def load_weights(self, file_path):
+    def save_weights(self, file_path):
         raise NotImplementedError()
 
-    def evaluate(self, array_true_labels, method='roc'):
-        # calling self.predicted_labels
+    def load_weights(self, file_path):
         raise NotImplementedError()
 
     def build(self):
