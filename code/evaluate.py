@@ -19,7 +19,7 @@ dataset_linestyles = {'train': '-',
 
 
 def evaluate_full(y_dict, metric='roc', names=None,
-                  print_msg=True, plot=True):
+                  print_msg=True, plot=True, fig_path=None):
     '''
     Detailed evaluation of multilabel classification
 
@@ -31,6 +31,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
     - names: list of names for each label (e.g. ['toxic', 'obscene', 'insult'])
     - print_msg: bool to print message
     - plot: bool to plot ROC/PRC
+    - fig_path: file path to save the figure
 
     Return:
     dict['average'|label]['train'|'dev'|'test']
@@ -46,6 +47,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
     # Evaluate all results
     results = {}
     results['average'] = {}
+    # Evaluate mean column-wise result
     for dataset in curr_datasets:
         y_true = y_dict[dataset][0]
         y_score = y_dict[dataset][1]
@@ -54,9 +56,11 @@ def evaluate_full(y_dict, metric='roc', names=None,
         if print_msg:
             message = "Mean column-wise {} - {} = {:.4f}"
             print message.format(metric_long[metric], dataset, perf_score)
+    # Initialize plot if requested
     if plot:
         fig = plt.figure(figsize=(7, 6))
         ax = fig.add_subplot(111)
+    # Evaluate for each label
     for i, name in enumerate(names):
         results[name] = {}
         for dataset in curr_datasets:
@@ -74,6 +78,10 @@ def evaluate_full(y_dict, metric='roc', names=None,
                 plot_metric_curve(y_true, y_score, metric=metric, ax=ax,
                                   label=label, color=color,
                                   linestyle=dataset_linestyles[dataset])
+    # Save fig
+    if fig_path:
+        plt.savefig(fig_path, bbox_inches='tight')
+
     return results
 
 
