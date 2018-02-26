@@ -31,7 +31,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
     - names: list of names for each label (e.g. ['toxic', 'obscene', 'insult'])
     - print_msg: bool to print message
     - plot: bool to plot ROC/PRC
-    - fig_path: file path to save the figure
+    - fig_path: file path to save the figure (no extension)
 
     Return:
     dict['average'|label]['train'|'dev'|'test']
@@ -80,7 +80,8 @@ def evaluate_full(y_dict, metric='roc', names=None,
                                   linestyle=dataset_linestyles[dataset])
     # Save fig
     if fig_path:
-        plt.savefig(fig_path, bbox_inches='tight')
+        plt.savefig(fig_path+'.png', bbox_inches='tight')
+        plt.savefig(fig_path+'.eps', bbox_inches='tight')
 
     return results
 
