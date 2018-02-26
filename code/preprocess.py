@@ -49,10 +49,11 @@ def filter_labels(df_train, columns):
     return df_train[columns].values.astype('float32')
 
 
-def get_glove(glove_dim):
-    glove_prefix = '../data/glove/glove.6B.'
-    glove_suffix = 'd.txt'
-    glove_file = glove_prefix+str(glove_dim)+glove_suffix
+def get_glove(glove_dim, glove_file=None):
+    if glove_file is None:
+        glove_prefix = '../data/glove/glove.6B.'
+        glove_suffix = 'd.txt'
+        glove_file = glove_prefix+str(glove_dim)+glove_suffix
     return vocab.get_glove(glove_file, glove_dim)
 
 
