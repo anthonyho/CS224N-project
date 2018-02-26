@@ -5,7 +5,7 @@ import utils
 from model import Model
 
 
-example_config = {'exp_name': 'ff_l2_f50',
+example_config = {'exp_name': 'ff_l2_h20_f50',
                   'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
                   'n_epochs': 500,  # number of iterations
                   'n_features': 50,  # dimension of the inputs
