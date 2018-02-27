@@ -9,13 +9,13 @@ import evaluate
 import nn_model
 
 
-config = {'exp_name': 'ff_l3_h30_f300',
+config = {'exp_name': 'ff_l2_h30_f300',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
           'n_epochs': 500,  # number of iterations
           'n_features': 300,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
-          'n_layers': 3,  # number of hidden layers
-          'hidden_sizes': [30, 30, 30],  # size of hidden layers; int or list of int
+          'n_layers': 2,  # number of hidden layers
+          'hidden_sizes': [30, 30],  # size of hidden layers; int or list of int
           'lr': .0005,  # learning rate
           'batch_size': 2000,  # number of training examples in each minibatch
           'activation': tf.nn.relu,
