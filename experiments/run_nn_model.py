@@ -23,6 +23,7 @@ config = {'exp_name': 'ff_l3_h30_f300',
           'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
           }
 
+
 data_file = '../data/train.csv'
 tokenized_comments_file = '../data/train_comments.p'
 out_dir = 'out/'
@@ -80,14 +81,19 @@ def run(config, data, emb_data, debug=False):
               'dev': (labels_dev, y_score_dev)}
 
     # Evaluate, plot and save
-    file_prefix = os.path.join(out_dir, config['exp_name'] + '_')
+    save_prefix = os.path.join(out_dir, config['exp_name'])
     if debug:
-        file_prefix += 'debug_'
-    evaluate.plot_loss(list_loss, fig_path=file_prefix+'loss')
-    results_roc = evaluate.evaluate_full(y_dict, names=config['label_names'],
-                                         metric='roc', fig_path=file_prefix+'roc')
-    results_prc = evaluate.evaluate_full(y_dict, names=config['label_names'],
-                                         metric='prc', fig_path=file_prefix+'prc')
+        save_prefix += '_debug'
+    print 'Final loss = {:.4f}'.format(list_loss[-1])
+    with open(save_prefix+'.txt', 'w') as f:
+        f.write('Final loss = {:.4f}\n'.format(list_loss[-1]))
+    evaluate.plot_loss(list_loss, save_prefix=save_prefix)
+    results_roc = evaluate.evaluate_full(y_dict, metric='roc', names=config['label_names'],
+                                         print_msg=True, save_msg=True, plot=True,
+                                         save_prefix=save_prefix)
+    results_prc = evaluate.evaluate_full(y_dict, metric='prc', names=config['label_names'],
+                                         print_msg=True, save_msg=True, plot=True,
+                                         save_prefix=save_prefix)
 
 
 if __name__ == '__main__':

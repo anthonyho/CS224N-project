@@ -19,7 +19,7 @@ dataset_linestyles = {'train': '-',
 
 
 def evaluate_full(y_dict, metric='roc', names=None,
-                  print_msg=True, plot=True, fig_path=None):
+                  print_msg=True, save_msg=False, plot=True, save_prefix=None):
     '''
     Detailed evaluation of multilabel classification
 
@@ -31,7 +31,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
     - names: list of names for each label (e.g. ['toxic', 'obscene', 'insult'])
     - print_msg: bool to print message
     - plot: bool to plot ROC/PRC
-    - fig_path: file path to save the figure (no extension)
+    - save_prefix: file path to save the figure (no extension)
 
     Return:
     dict['average'|label]['train'|'dev'|'test']
@@ -53,9 +53,13 @@ def evaluate_full(y_dict, metric='roc', names=None,
         y_score = y_dict[dataset][1]
         perf_score = evaluate(y_true, y_score, metric=metric, average=True)
         results['average'][dataset] = perf_score
+        message = "Mean column-wise {} - {} = {:.4f}"
+        message = message.format(metric_long[metric], dataset, perf_score)
         if print_msg:
-            message = "Mean column-wise {} - {} = {:.4f}"
-            print message.format(metric_long[metric], dataset, perf_score)
+            print message
+        if save_msg:
+            with open(save_prefix+'.txt', 'a') as f:
+                f.write(message+'\n')
     # Initialize plot if requested
     if plot:
         fig = plt.figure(figsize=(7, 6))
@@ -68,10 +72,14 @@ def evaluate_full(y_dict, metric='roc', names=None,
             y_score = y_dict[dataset][1][:, i]
             perf_score = evaluate(y_true, y_score, metric=metric)
             results[name][dataset] = perf_score
-            if print_msg:
-                message = "{} of {} - {} = {:.4f}"
-                print message.format(metric_long[metric],
+            message = "{} of {} - {} = {:.4f}"
+            message = message.format(metric_long[metric],
                                      name, dataset, perf_score)
+            if print_msg:
+                print message
+            if save_msg:
+                with open(save_prefix+'.txt', 'a') as f:
+                    f.write(message+'\n')
             if plot:
                 label = name + ' - ' + dataset
                 color = colors[2 * i + 1]
@@ -79,9 +87,9 @@ def evaluate_full(y_dict, metric='roc', names=None,
                                   label=label, color=color,
                                   linestyle=dataset_linestyles[dataset])
     # Save fig
-    if fig_path:
-        plt.savefig(fig_path+'.png', bbox_inches='tight')
-        plt.savefig(fig_path+'.eps', bbox_inches='tight')
+    if save_prefix:
+        plt.savefig(save_prefix+'_'+metric+'.png', bbox_inches='tight')
+        plt.savefig(save_prefix+'_'+metric+'.eps', bbox_inches='tight')
 
     return results
 
@@ -139,12 +147,12 @@ def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
                             legendloc=(1.04, 0))
 
 
-def plot_loss(list_loss, fig_path=None):
+def plot_loss(list_loss, save_prefix=None):
     '''
     Plot loss over epoch
 
     Inputs:
-    - fig_path: file path to save the figure (no extension)
+    - save_prefix: file path to save the figure (no extension)
     '''
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -152,6 +160,6 @@ def plot_loss(list_loss, fig_path=None):
     ax.plot(list_loss, linewidth=3, color=colors[3])
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss')
 
-    if fig_path:
-        plt.savefig(fig_path+'.png', bbox_inches='tight')
-        plt.savefig(fig_path+'.eps', bbox_inches='tight')
+    if save_prefix:
+        plt.savefig(save_prefix+'_loss'+'.png', bbox_inches='tight')
+        plt.savefig(save_prefix+'_loss'+'.eps', bbox_inches='tight')
