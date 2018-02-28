@@ -24,20 +24,6 @@ config = {'exp_name': 'ff_l2_h30_f300',
           'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
           }
 
-config = {'exp_name': 'ff_l2_h20_f50',
-          'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 500,  # number of iterations
-          'n_features': 50,  # dimension of the inputs
-          'n_labels': 6,  # number of labels to predict
-          'n_layers': 2,  # number of hidden layers
-          'hidden_sizes': [20, 20],  # size of hidden layers; int or list of int
-          'lr': .0005,  # learning rate
-          'batch_size': 2000,  # number of training examples in each minibatch
-          'activation': tf.nn.relu,
-          'optimizer': tf.train.AdamOptimizer,
-          'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
-          }
-
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'
@@ -140,7 +126,7 @@ def run(config, data, emb_data, debug=False):
         y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack
 
 if __name__ == '__main__':
-    debug = True
+    debug = False
     data, emb_data = load_and_process(config, train_data_file, test_data_file,
                                       train_tokens_file, test_tokens_file,
                                       debug=debug)
