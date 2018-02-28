@@ -2,6 +2,7 @@
 import os, sys
 sys.path.insert(0, os.path.abspath('../code'))
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import preprocess
@@ -23,44 +24,79 @@ config = {'exp_name': 'ff_l2_h30_f300',
           'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
           }
 
+config = {'exp_name': 'ff_l2_h20_f50',
+          'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
+          'n_epochs': 500,  # number of iterations
+          'n_features': 50,  # dimension of the inputs
+          'n_labels': 6,  # number of labels to predict
+          'n_layers': 2,  # number of hidden layers
+          'hidden_sizes': [20, 20],  # size of hidden layers; int or list of int
+          'lr': .0005,  # learning rate
+          'batch_size': 2000,  # number of training examples in each minibatch
+          'activation': tf.nn.relu,
+          'optimizer': tf.train.AdamOptimizer,
+          'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
+          }
 
-data_file = '../data/train.csv'
-tokenized_comments_file = '../data/train_comments.p'
+
+train_data_file = '../data/train.csv'
+train_tokens_file = '../data/train_comments.p'
+
+test_data_file = '../data/test.csv'
+test_tokens_file = '../data/test_comments.p'
+
 out_dir = 'out/'
 
 
-def load_and_process(config, data_file, tokenized_comments_file=None, debug=False):
+def load_and_process(config, train_data_file, test_data_file=None,
+                     train_tokens_file=None, test_tokens_file=None,
+                     debug=False):
 
     # Get glove/w2v data
     emb_data = preprocess.get_glove(config['n_features'])
 
-    # Load and (optionally) subset data
-    data = preprocess.load_data(data_file)
+    # Load and (optionally) subset train data
+    train_data = preprocess.load_data(train_data_file)
     if debug and isinstance(debug, bool):
-        data = data.head(6000)
+        train_data = train_data.head(6000)
     elif debug and isinstance(debug, int):
-        data = data.head(debug)
+        train_data = train_data.head(debug)
 
-    # Tokenize comments or load pre-tokenized comments
-    if debug or (tokenized_comments_file is None):
-        inputs = preprocess.tokenize_df(data)
+    # Load test data
+    if test_data_file:
+        test_data = preprocess.load_data(test_data_file)
+        id_test = test_data['id']
     else:
-        inputs = preprocess.load_tokenized_comments(tokenized_comments_file)
+        id_test = None
 
-    # Load labels
-    labels = preprocess.filter_labels(data, config['label_names'])
+    # Tokenize train comments or load pre-tokenized train comments
+    if debug or (train_tokens_file is None):
+        inputs = preprocess.tokenize_df(train_data)
+    else:
+        inputs = preprocess.load_tokenized_comments(train_tokens_file)
+    # Tokenize test comments or load pre-tokenized test comments
+    if test_data_file:
+        if test_tokens_file is None:
+            inputs_test = preprocess.tokenize_df(test_data)
+        else:
+            inputs_test = preprocess.load_tokenized_comments(test_tokens_file)
+    else:
+        inputs_test = None
+
+    # Load train labels
+    labels = preprocess.filter_labels(train_data, config['label_names'])
 
     # Split to train and dev sets
     inputs_train, labels_train, inputs_dev, labels_dev = preprocess.split_train_dev(inputs, labels,
                                                                                     fraction_dev=0.3)
 
-    return (inputs_train, labels_train, inputs_dev, labels_dev), emb_data
+    return (inputs_train, labels_train, inputs_dev, labels_dev, inputs_test, id_test), emb_data
 
 
 def run(config, data, emb_data, debug=False):
 
     # Unpack data
-    (inputs_train, labels_train, inputs_dev, labels_dev) = data
+    (inputs_train, labels_train, inputs_dev, labels_dev, inputs_test, id_test) = data
 
     # Initialize graph
     tf.reset_default_graph()
@@ -75,6 +111,8 @@ def run(config, data, emb_data, debug=False):
         list_loss = obj.train(sess, inputs_train, labels_train)
         y_score_train = obj.predict(sess, inputs_train)
         y_score_dev = obj.predict(sess, inputs_dev)
+        if inputs_test:
+            y_score_test = obj.predict(sess, inputs_test)
 
     # Pack y_dict
     y_dict = {'train': (labels_train, y_score_train),
@@ -95,8 +133,15 @@ def run(config, data, emb_data, debug=False):
                                          print_msg=True, save_msg=True, plot=True,
                                          save_prefix=save_prefix)
 
+    # Save y_score_test to csv
+    if inputs_test:
+        y_score_test_df = pd.DataFrame(y_score_test, columns=config['label_names'])
+        y_score_test_df = pd.concat([id_test, y_score_test_df], axis=1)
+        y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack
 
 if __name__ == '__main__':
-    debug = False
-    data, emb_data = load_and_process(config, data_file, tokenized_comments_file, debug=debug)
+    debug = True
+    data, emb_data = load_and_process(config, train_data_file, test_data_file,
+                                      train_tokens_file, test_tokens_file,
+                                      debug=debug)
     run(config, data, emb_data, debug=debug)
