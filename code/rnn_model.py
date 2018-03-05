@@ -40,7 +40,7 @@ class RNNModel(Model):
         return feed_dict
 
     def _add_prediction_op(self):
-        embed_matrix = tf.Variable(initial_value=self.pretrained_embeddings)      
+        embed_matrix = tf.Variable(initial_value=self.emb_matrix)      
         embeddings2 = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
         embeddings = tf.reshape(embeddings2,(-1,Config.max_length,Config.n_features*Config.embed_size))
         
