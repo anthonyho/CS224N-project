@@ -1,12 +1,18 @@
 import tensorflow as tf
-from preprocess import get_glove
+from preprocess import get_glove, tokens_to_ids
 from model import Model
+import utils
+import numpy as np
 
 config = {
     'batch_size' : 20,
     'state_size' : 50,
     'max_comment_size'  : 100,
-
+    'embed_size' : 50,
+    'n_classes' : 6,
+    'lr' : 0.001,
+    'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
+    'n_epochs': 10,
 }
 
 class RNNModel(Model):
@@ -26,13 +32,13 @@ class RNNModel(Model):
 
     def _add_placeholders(self):
         self.input_placeholder = tf.placeholder(tf.int32, 
-            [self.config['batch_size'], self.config['max_comment_size'],1])
-        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, 1))
+            [self.config['batch_size'], self.config['max_comment_size']])
+        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, 6))
         self.mask_placeholder = tf.placeholder(tf.bool,shape=(None,self.config['max_comment_size']))
 
     def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None):
         feed_dict = {
-            self.inputs_placeholder: inputs_batch,
+            self.input_placeholder: inputs_batch,
             self.mask_placeholder : masks_batch,
             }
         if labels_batch is not None:
@@ -40,24 +46,29 @@ class RNNModel(Model):
         return feed_dict
 
     def _add_prediction_op(self):
-        embed_matrix = tf.Variable(initial_value=self.emb_matrix)      
+        embed_matrix = tf.Variable(initial_value=self.emb_matrix.astype('float32'))      
         embeddings2 = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
-        embeddings = tf.reshape(embeddings2,(-1,Config.max_length,Config.n_features*Config.embed_size))
+        embeddings = tf.reshape(embeddings2,(-1, self.config['max_comment_size'], self.config['embed_size']))
         
+        U = tf.get_variable("U",shape=(self.config['state_size'],self.config['n_classes']),initializer=tf.contrib.layers.xavier_initializer())
+        b2 = tf.get_variable("b2",shape=(self.config['n_classes']),initializer=tf.constant_initializer())
+
         x = embeddings
         cell = tf.contrib.rnn.BasicRNNCell(self.config['state_size'])
-        out, state = tf.nn.dynamic_rnn(cell,x,dtype=tf.float32)
-        preds = tf.sigmoid(state)
-    
+        outputs, state = tf.nn.dynamic_rnn(cell,x,dtype=tf.float32)
+        seq_lengths = tf.reduce_sum(tf.cast(self.mask_placeholder,tf.int32),axis=1)
+        
+        idx = tf.range(self.config['batch_size'])*tf.shape(outputs)[1] + (seq_lengths - 1)
+        last_rnn_outputs = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
+        
+        return tf.sigmoid(tf.matmul(last_rnn_outputs,U) + b2)
 
     def _add_loss_op(self, preds):
-        loss = tf.reduce_mean(tf.boolean_mask(
-            tf.nn.sigmoid_cross_entropy_with_logits(
-                logits=preds,labels=self.labels_placeholder),
-                self.mask_placeholder))
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=preds,labels=self.labels_placeholder)
+        return tf.reduce_mean(loss)
 
     def _add_training_op(self, loss):
-        optimizer = tf.train.AdamOptimizer(learning_rate=Config.lr)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.config['lr'])
         train_op = optimizer.minimize(loss)
         return train_op
 
@@ -68,7 +79,7 @@ class RNNModel(Model):
 
     def _run_epoch(self, sess, inputs, masks, labels, shuffle):
         minibatches = utils.minibatch(self.config['batch_size'],
-                                      inputs, labels, masks, shuffle)
+                                      inputs, labels=labels, masks=masks, shuffle=shuffle)
         loss = 0
         for i, (inputs_batch, masks_batch, labels_batch) in enumerate(minibatches):
             loss += self._train_on_batch(sess, inputs_batch, masks_batch, labels_batch)
@@ -76,6 +87,7 @@ class RNNModel(Model):
         return loss
 
     def train(self, sess, inputs, masks, labels, shuffle=True):
+        inputs = np.array(tokens_to_ids(inputs, self.word2id))
         list_loss = []
         for epoch in range(self.config['n_epochs']):
             list_loss.append(self._run_epoch(sess, inputs, masks, labels, shuffle))

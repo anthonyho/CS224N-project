@@ -34,7 +34,7 @@ def minibatch(batch_size, inputs, labels=None, masks=None, shuffle=True):
     if labels is not None:
         assert len(inputs) == len(labels), \
             'Inputs and labels must have equal dimensions!'
-    if mask is not None:
+    if masks is not None:
         assert len(inputs) == len(masks), \
             'Inputs and masks must have equal dimensions!'
     n_data = len(inputs)
