@@ -25,13 +25,30 @@ def _tokenize_single_string(string):
               for token in nltk.word_tokenize(string)]
     return tokens
 
+def _uniformize_list_tokens_length(list_tokens, target_length,zero_token_id=u'<UNK>'):
+    padded_list_tokens = list_tokens[:target_length] #clip if too long
+    mask = len(padded_list_tokens) * [True]
+    while len(padded_list_tokens) < target_length:
+        padded_list_tokens.append(zero_token_id)
+        mask.append(False)
+    return padded_list_tokens, mask
 
-def tokenize_df(df, column='comment_text'):
+def tokenize_df(df, column='comment_text',target_length=None,**kwargs):
     list_list_tokens = []
+    masks = []
     for index, item in df[column].iteritems():
-        list_list_tokens.append(_tokenize_single_string(item))
-    return list_list_tokens
-
+        list_tokens = _tokenize_single_string(item)
+        if target_length is not None:
+            padded_list_tokens, mask = _uniformize_list_tokens_length(list_tokens,target_length,**kwargs)
+            list_list_tokens.append(padded_list_tokens)
+            masks.append(mask)
+        else: 
+            list_list_tokens.append(list_tokens)
+            return list_list_tokens
+    if target_length is not None:
+        return list_list_tokens, masks
+    else:
+        return list_list_tokens
 
 def tokens_to_ids(list_list_tokens, word2id):
     return [[word2id.get(token, id_unknown) for token in list_tokens]
