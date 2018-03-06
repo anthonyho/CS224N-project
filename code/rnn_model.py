@@ -47,7 +47,7 @@ class RNNModel(Model):
         outputs, state = tf.nn.dynamic_rnn(cell,x,dtype=tf.float32)
         seq_lengths = tf.reduce_sum(tf.cast(self.mask_placeholder,tf.int32),axis=1)
         
-        idx = tf.range(self.config['batch_size'])*tf.shape(outputs)[1] + (seq_lengths - 1)
+        idx = tf.range(tf.shape(self.input_placeholder)[0])*tf.shape(outputs)[1] + (seq_lengths - 1)
         last_rnn_outputs = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
         
         pred = tf.matmul(last_rnn_outputs,U) + b2
