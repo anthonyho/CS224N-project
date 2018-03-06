@@ -74,11 +74,14 @@ class RNNModel(Model):
         return utils.sigmoid(pred_batch)
 
     def _run_epoch(self, sess, inputs, masks, labels, shuffle):
+        n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
+        prog = tf.keras.utils.Progbar(target=n_minibatches)
         minibatches = utils.minibatch(self.config['batch_size'],
                                       inputs, labels=labels, masks=masks, shuffle=shuffle)
         loss = 0
         for i, (inputs_batch, masks_batch, labels_batch) in enumerate(minibatches):
             loss += self._train_on_batch(sess, inputs_batch, masks_batch, labels_batch)
+            prog.update(i+1,[('train_loss', loss)], force=i+1 == n_minibatches)
         loss /= (i + 1)
         return loss
 
