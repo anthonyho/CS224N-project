@@ -87,9 +87,8 @@ def load_and_process(config, train_data_file, test_data_file=None,
     labels = preprocess.filter_labels(train_data, config['label_names'])
 
     # Split to train and dev sets
-    inputs_train, labels_train, masks_train,
-    inputs_dev, labels_dev, masks_dev  = preprocess.split_train_dev(inputs, labels, masks,
-                                                                    fraction_dev=0.3)
+    inputs_train, labels_train, masks_train, inputs_dev, labels_dev, masks_dev = preprocess.split_train_dev(inputs, labels, masks,
+                                                                                                            fraction_dev=0.3)
 
 
     return (inputs_train, labels_train, masks_train,
