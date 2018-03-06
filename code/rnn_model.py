@@ -11,7 +11,7 @@ config = {'exp_name': 'rnn_full_1',
           'embed_size': 300,  # dimension of the inputs
           'n_features': 300,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
-          'max_comment_size'  : max_comment_size,
+          'max_comment_size'  : 250,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
           'batch_size': 2048,  # number of training examples in each minibatch
