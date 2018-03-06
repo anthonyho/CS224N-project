@@ -14,7 +14,7 @@ config = {
     'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
     'n_epochs': 10,
     'direction': '',
-    'cell': tf.
+    'cell': ''
 }
 
 class RNNModel(Model):
