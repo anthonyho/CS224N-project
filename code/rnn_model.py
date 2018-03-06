@@ -54,12 +54,12 @@ class RNNModel(Model):
         x = embeddings
         cell = self.config['cell'](self.config['state_size'], **self.config['cell_kwargs'])
         # Add droput
-        if dropout:
+        if self.config['dropout']:
             cell = tf.contrib.rnn.DropoutWrapper(cell, **self.config['dropout_kwargs'])
         # Create layers
         multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'])
         # Unroll
-        if bidirectional:
+        if self.config['bidirectional']:
             outputs, state = tf.nn.bidirectional_dynamic_rnn(multi_cells, multi_cells, x, dtype=tf.float32)
         else:
             outputs, state = tf.nn.dynamic_rnn(multi_cells, x, dtype=tf.float32)
