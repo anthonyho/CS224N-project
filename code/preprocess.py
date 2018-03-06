@@ -44,7 +44,6 @@ def tokenize_df(df, column='comment_text',target_length=None,**kwargs):
             masks.append(mask)
         else: 
             list_list_tokens.append(list_tokens)
-            return list_list_tokens
     if target_length is not None:
         return list_list_tokens, masks
     else:

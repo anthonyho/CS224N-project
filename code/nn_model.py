@@ -4,7 +4,6 @@ import preprocess
 import utils
 from model import Model
 
-
 example_config = {'exp_name': 'ff_l2_h20_f50',
                   'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
                   'n_epochs': 500,  # number of iterations
@@ -82,11 +81,14 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def _run_epoch(self, sess, inputs, labels, shuffle):
+        n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
+        prog = tf.keras.utils.Progbar(target=n_minibatches)
         minibatches = utils.minibatch(self.config['batch_size'],
-                                      inputs, labels, shuffle)
+                                      inputs, labels=labels, shuffle=shuffle)
         loss = 0
         for i, (inputs_batch, labels_batch) in enumerate(minibatches):
             loss += self._train_on_batch(sess, inputs_batch, labels_batch)
+            prog.update(i+1,[('train_loss', loss)], force=i+1 == n_minibatches)
         loss /= (i + 1)
         return loss
 

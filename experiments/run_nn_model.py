@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 import preprocess
 import evaluate
 import nn_model
-
+import yaml
 
 config = {'exp_name': 'ff_l2_h30_f300',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 500,  # number of iterations
-          'n_features': 300,  # dimension of the inputs
+          'n_epochs': 10,  # number of iterations
+          'n_features': 50,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
-          'n_layers': 2,  # number of hidden layers
-          'hidden_sizes': [30, 30],  # size of hidden layers; int or list of int
+          'n_layers': 1,  # number of hidden layers
+          'hidden_sizes': [30],  # size of hidden layers; int or list of int
           'lr': .0005,  # learning rate
           'batch_size': 2000,  # number of training examples in each minibatch
           'activation': tf.nn.relu,
@@ -24,6 +24,13 @@ config = {'exp_name': 'ff_l2_h30_f300',
           'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
           }
 
+config2 = {
+
+}
+
+list_configs = [config]
+
+debug = 1000
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'
@@ -89,7 +96,15 @@ def run(config, data, emb_data, debug=False):
     with tf.Graph().as_default() as graph:
         obj = nn_model.FeedForwardNeuralNetwork(config, emb_data=emb_data)
         init_op = tf.global_variables_initializer()
+        saver = tf.train.Saver()
     graph.finalize()
+
+    save_dir = os.path.join(out_dir, config['exp_name'])
+    if debug:
+        save_dir += '_debug'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    save_prefix = os.path.join(save_dir, config['exp_name'])
 
     # Fit
     with tf.Session(graph=graph) as sess:
@@ -99,17 +114,17 @@ def run(config, data, emb_data, debug=False):
         y_score_dev = obj.predict(sess, inputs_dev)
         if inputs_test:
             y_score_test = obj.predict(sess, inputs_test)
+        saver.save(sess,save_prefix)
 
     # Pack y_dict
     y_dict = {'train': (labels_train, y_score_train),
               'dev': (labels_dev, y_score_dev)}
 
     # Evaluate, plot and save
-    save_prefix = os.path.join(out_dir, config['exp_name'])
-    if debug:
-        save_prefix += '_debug'
     print 'Final loss = {:.4f}'.format(list_loss[-1])
     with open(save_prefix+'.txt', 'w') as f:
+        yaml.dump(config, f)
+        f.write('\n')
         f.write('Final loss = {:.4f}\n'.format(list_loss[-1]))
     evaluate.plot_loss(list_loss, save_prefix=save_prefix)
     results_roc = evaluate.evaluate_full(y_dict, metric='roc', names=config['label_names'],
@@ -125,9 +140,22 @@ def run(config, data, emb_data, debug=False):
         y_score_test_df = pd.concat([id_test, y_score_test_df], axis=1)
         y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack
 
+def predict_from_params(inputs, config, emb_data, path_to_noext_file)
+    tf.reset_default_graph()
+    with tf.Graph().as_default() as graph:
+        obj = nn_model.FeedForwardNeuralNetwork(config=config, emb_data=emb_data)
+        init_op = tf.global_variables_initializer()
+        saver = tf.train.Saver()
+
+        with tf.Session() as sess:
+            sess.run(init_op)
+            saver.restore(sess,path_to_noext_file)
+            print 'restored'
+            scores = obj.predict(sess,
+                        inputs)
+    return scores
+
 if __name__ == '__main__':
-    debug = False
     data, emb_data = load_and_process(config, train_data_file, test_data_file,
-                                      train_tokens_file, test_tokens_file,
                                       debug=debug)
     run(config, data, emb_data, debug=debug)
