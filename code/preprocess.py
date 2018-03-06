@@ -25,6 +25,7 @@ def _tokenize_single_string(string):
               for token in nltk.word_tokenize(string)]
     return tokens
 
+
 def _uniformize_list_tokens_length(list_tokens, target_length,zero_token_id=u'<UNK>'):
     padded_list_tokens = list_tokens[:target_length] #clip if too long
     mask = len(padded_list_tokens) * [True]

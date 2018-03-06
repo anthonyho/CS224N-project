@@ -4,18 +4,27 @@ from model import Model
 import utils
 import numpy as np
 
-config = {
-    'batch_size' : 20,
-    'state_size' : 50,
-    'max_comment_size'  : 100,
-    'embed_size' : 50,
-    'n_labels' : 6,
-    'lr' : 0.001,
-    'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-    'n_epochs': 10,
-    'direction': '',
-    'cell': ''
-}
+
+config = {'exp_name': 'rnn_full_1',
+          'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
+          'n_epochs': 50,  # number of iterations
+          'embed_size': 300,  # dimension of the inputs
+          'n_features': 300,  # dimension of the inputs
+          'n_labels': 6,  # number of labels to predict
+          'max_comment_size'  : max_comment_size,
+          'state_size': 50,  # size of hidden layers; int
+          'lr': .001,  # learning rate
+          'batch_size': 2048,  # number of training examples in each minibatch
+          'cell': tf.contrib.rnn.LSTMCell,
+          'cell_kwargs': {},
+          'dropout': True,
+          'dropout_kwargs': {'input_keep_prob': 0.8,
+                             'output_keep_prob': 0.8,
+                             'state_keep_prob': 0.8},
+          'n_layers': 2,
+          'bidirectional': False
+          }
+
 
 class RNNModel(Model):
 
@@ -28,27 +37,33 @@ class RNNModel(Model):
                                                shape=(None,self.config['max_comment_size']))
 
     def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None):
-        feed_dict = {
-            self.input_placeholder: inputs_batch,
-            self.mask_placeholder : masks_batch,
-            }
+        feed_dict = {self.input_placeholder: inputs_batch,
+                     self.mask_placeholder: masks_batch}
         if labels_batch is not None:
             feed_dict[self.labels_placeholder] = labels_batch
         return feed_dict
 
     def _add_prediction_op(self):
-        embed_matrix = tf.Variable(initial_value=self.emb_matrix.astype('float32'))      
+        embed_matrix = tf.Variable(self.emb_matrix.astype('float32'))
         embeddings2 = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
-        embeddings = tf.reshape(embeddings2,(-1, self.config['max_comment_size'], self.config['embed_size']))
+        embeddings = tf.reshape(embeddings2, (-1, self.config['max_comment_size'], self.config['embed_size']))
         
         U = tf.get_variable("U",shape=(self.config['state_size'],self.config['n_labels']),initializer=tf.contrib.layers.xavier_initializer())
         b2 = tf.get_variable("b2",shape=(self.config['n_labels']),initializer=tf.constant_initializer())
-
+        # Create cell
         x = embeddings
-        cell = tf.contrib.rnn.BasicRNNCell(self.config['state_size'])
-        outputs, state = tf.nn.dynamic_rnn(cell,x,dtype=tf.float32)
-        seq_lengths = tf.reduce_sum(tf.cast(self.mask_placeholder,tf.int32),axis=1)
-        
+        cell = self.config['cell'](self.config['state_size'], **self.config['cell_kwargs'])
+        # Add droput
+        if dropout:
+            cell = tf.contrib.rnn.DropoutWrapper(cell, **self.config['dropout_kwargs'])
+        # Create layers
+        multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'])
+        # Unroll
+        if bidirectional:
+            outputs, state = tf.nn.bidirectional_dynamic_rnn(multi_cells, multi_cells, x, dtype=tf.float32)
+        else:
+            outputs, state = tf.nn.dynamic_rnn(multi_cells, x, dtype=tf.float32)
+        seq_lengths = tf.reduce_sum(tf.cast(self.mask_placeholder, tf.int32), axis=1)
         idx = tf.range(tf.shape(self.input_placeholder)[0])*tf.shape(outputs)[1] + (seq_lengths - 1)
         last_rnn_outputs = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
         
@@ -91,7 +106,7 @@ class RNNModel(Model):
         inputs = np.array(tokens_to_ids(tokens, self.word2id))
         list_loss = []
         for epoch in range(self.config['n_epochs']):
-            print "Epoch = {}/{}:".format(str(epoch), str(self.config['n_epochs']))
+            print "Epoch = {}/{}:".format(str(epoch + 1), str(self.config['n_epochs']))
             list_loss.append(self._run_epoch(sess, inputs, masks, labels, shuffle))
         return list_loss
 

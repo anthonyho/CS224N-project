@@ -22,13 +22,17 @@ config = {'exp_name': 'rnn_full_1',
           'n_features': 300,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
-#          'n_layers': 1,  # number of hidden layers
-          'state_size': 50,  # size of hidden layers; int or list of int
+          'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
-          'batch_size': 2048  # number of training examples in each minibatch
-#          'activation': tf.nn.relu,
-#          'optimizer': tf.train.AdamOptimizer,
-#          'initializer': tf.contrib.layers.xavier_initializer(uniform=False)
+          'batch_size': 2048,  # number of training examples in each minibatch
+          'cell': tf.contrib.rnn.LSTMCell,
+          'cell_kwargs': {},
+          'dropout': True,
+          'dropout_kwargs': {'input_keep_prob': 0.8,
+                             'output_keep_prob': 0.8,
+                             'state_keep_prob': 0.8},
+          'n_layers': 2,
+          'bidirectional': False
           }
 
 config2 = {
@@ -37,7 +41,7 @@ config2 = {
 
 list_configs = [config]
 
-debug = False
+debug = 4000
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'
