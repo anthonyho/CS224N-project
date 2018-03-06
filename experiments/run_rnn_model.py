@@ -4,18 +4,20 @@ sys.path.insert(0, os.path.abspath('../code'))
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import matplotlib
 import matplotlib.pyplot as plt
 import preprocess
 import evaluate
 import rnn_model
 import yaml
 
+matplotlib.use('Agg')
 
 max_comment_size = 250
 
 config = {'exp_name': 'rnn_full_1',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 100,  # number of iterations
+          'n_epochs': 5,  # number of iterations
           'embed_size': 50,  # dimension of the inputs
           'n_features': 50,  # dimension of the inputs
           'n_classes': 6,  # number of labels to predict
@@ -35,7 +37,7 @@ config2 = {
 
 list_configs = [config]
 
-debug = 5000
+debug = 4000
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'

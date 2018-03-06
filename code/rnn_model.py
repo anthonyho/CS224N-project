@@ -89,6 +89,7 @@ class RNNModel(Model):
         inputs = np.array(tokens_to_ids(tokens, self.word2id))
         list_loss = []
         for epoch in range(self.config['n_epochs']):
+            print "Epoch = {}/{}:".format(str(epoch), str(self.config['n_epochs']))
             list_loss.append(self._run_epoch(sess, inputs, masks, labels, shuffle))
         return list_loss
 
