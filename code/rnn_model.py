@@ -21,7 +21,7 @@ class RNNModel(Model):
 
     def _add_placeholders(self):
         self.input_placeholder = tf.placeholder(tf.int32, 
-            [self.config['batch_size'], self.config['max_comment_size']])
+            [None, self.config['max_comment_size']])
         self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, 6))
         self.mask_placeholder = tf.placeholder(tf.bool,shape=(None,self.config['max_comment_size']))
 
