@@ -35,7 +35,7 @@ config2 = {
 
 list_configs = [config]
 
-debug = 1000
+debug = 5000
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'

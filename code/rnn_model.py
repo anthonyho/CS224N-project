@@ -13,22 +13,11 @@ config = {
     'lr' : 0.001,
     'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
     'n_epochs': 10,
+    'direction': '',
+    'cell': tf.
 }
 
 class RNNModel(Model):
-
-    def __init__(self, config=None, emb_data=None, glove_dim=None):
-        # Load word embedding data from memory if already loaded
-        if emb_data is not None:
-            self.emb_matrix = emb_data[0]
-            self.word2id = emb_data[1]
-            self.id2word = emb_data[2]
-        # Load glove data from file
-        elif glove_dim is not None:
-            self.emb_matrix, self.word2id, self.id2word = get_glove(glove_dim)
-        # Load config and build
-        self.config = config
-        self.build()
 
     def _add_placeholders(self):
         self.input_placeholder = tf.placeholder(tf.int32, 
