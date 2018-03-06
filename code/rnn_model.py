@@ -68,6 +68,11 @@ class RNNModel(Model):
         _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
         return loss
 
+    def _predict_on_batch(self, sess, inputs_batch, masks_batch):
+        feed = self._create_feed_dict(inputs_batch, masks_batch)
+        pred_batch = sess.run(self.pred, feed_dict=feed)
+        return utils.sigmoid(pred_batch)
+
     def _run_epoch(self, sess, inputs, masks, labels, shuffle):
         minibatches = utils.minibatch(self.config['batch_size'],
                                       inputs, labels=labels, masks=masks, shuffle=shuffle)
@@ -86,9 +91,12 @@ class RNNModel(Model):
 
     def predict(self, sess, tokens, masks):
         inputs = np.array(tokens_to_ids(tokens, self.word2id))
-        feed = self._create_feed_dict(inputs, masks)
-        pred = sess.run(self.pred, feed_dict=feed)
-        y_score = utils.sigmoid(pred)
+        minibatches = utils.minibatch(self.config['batch_size'],
+                                      inputs, labels=None, masks=masks, shuffle=False)
+        list_y_score = []
+        for i, (inputs_batch, masks_batch) in enumerate(minibatches):
+            list_y_score.append(self._predict_on_batch(sess, inputs_batch, masks_batch))
+        y_score = np.vstack(list_y_score)
         return y_score
 
     def save_weights(self, file_path):

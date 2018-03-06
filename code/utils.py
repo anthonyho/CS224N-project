@@ -48,6 +48,9 @@ def minibatch(batch_size, inputs, labels=None, masks=None, shuffle=True):
         elif labels is not None and masks is None:
             labels_batch = _get_items(labels, ind[i:i+batch_size])
             yield (inputs_batch, labels_batch)
+        elif labels is None and masks is not None:
+            masks_batch = _get_items(masks, ind[i:i+batch_size])
+            yield (inputs_batch, masks_batch)
         else:
             labels_batch = _get_items(labels, ind[i:i+batch_size])
             masks_batch = _get_items(masks, ind[i:i+batch_size])
