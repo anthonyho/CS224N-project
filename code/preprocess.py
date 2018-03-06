@@ -73,18 +73,23 @@ def get_glove(glove_dim, glove_file=None):
     return vocab.get_glove(glove_file, glove_dim)
 
 
-def split_train_dev(inputs, labels, fraction_dev=0.3, shuffle=True):
+def split_train_dev(inputs, labels, masks=None,
+                    fraction_dev=0.3, shuffle=True):
     '''
     Split data into train and dev sets
 
     Inputs:
     - inputs: list or numpy array (to be splitted across rows)
     - labels: list or numpy array (to be splitted across rows)
+    =- 
     - fraction_dev: fraction of data to be held out for dev set
     - shuffle: bool to randomly shuffle data before splitting
     '''
     assert len(inputs) == len(labels), \
         "Inputs and labels must have equal dimensions!"
+    if masks is not None:
+        assert len(inputs) == len(masks), \
+            "Inputs and labels must have equal dimensions!"
     n_data = len(inputs)
     ind = np.arange(n_data)
     if shuffle:
@@ -92,6 +97,13 @@ def split_train_dev(inputs, labels, fraction_dev=0.3, shuffle=True):
     boundary = int((1 - fraction_dev) * n_data)
     inputs_train = utils._get_items(inputs, ind[0:boundary])
     labels_train = utils._get_items(labels, ind[0:boundary])
+    if masks is not None:
+        masks_train = utils._get_items(masks, ind[0:boundary])
     inputs_dev = utils._get_items(inputs, ind[boundary:])
     labels_dev = utils._get_items(labels, ind[boundary:])
-    return inputs_train, labels_train, inputs_dev, labels_dev
+    if masks is not None:
+        masks_dev = utils._get_items(masks, ind[boundary:])
+    if masks is not None:
+        return inputs_train, labels_train, masks_train, inputs_dev, labels_dev, masks_dev
+    else:
+        return inputs_train, labels_train, inputs_dev, labels_dev
