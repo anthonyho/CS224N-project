@@ -21,7 +21,7 @@ config = {'exp_name': 'rnn_full_1',
           'n_classes': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
 #          'n_layers': 1,  # number of hidden layers
-          'state_sizes': 50,  # size of hidden layers; int or list of int
+          'state_size': 50,  # size of hidden layers; int or list of int
           'lr': .001,  # learning rate
           'batch_size': 2048  # number of training examples in each minibatch
 #          'activation': tf.nn.relu,
