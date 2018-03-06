@@ -9,7 +9,7 @@ config = {
     'state_size' : 50,
     'max_comment_size'  : 100,
     'embed_size' : 50,
-    'n_classes' : 6,
+    'n_labels' : 6,
     'lr' : 0.001,
     'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
     'n_epochs': 10,
@@ -23,7 +23,7 @@ class RNNModel(Model):
         self.input_placeholder = tf.placeholder(tf.int32,
                                                 shape=(None, self.config['max_comment_size']))
         self.labels_placeholder = tf.placeholder(tf.float32,
-                                                 shape=(None, 6))
+                                                 shape=(None, self.config['n_labels']))
         self.mask_placeholder = tf.placeholder(tf.bool,
                                                shape=(None,self.config['max_comment_size']))
 
@@ -41,8 +41,8 @@ class RNNModel(Model):
         embeddings2 = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
         embeddings = tf.reshape(embeddings2,(-1, self.config['max_comment_size'], self.config['embed_size']))
         
-        U = tf.get_variable("U",shape=(self.config['state_size'],self.config['n_classes']),initializer=tf.contrib.layers.xavier_initializer())
-        b2 = tf.get_variable("b2",shape=(self.config['n_classes']),initializer=tf.constant_initializer())
+        U = tf.get_variable("U",shape=(self.config['state_size'],self.config['n_labels']),initializer=tf.contrib.layers.xavier_initializer())
+        b2 = tf.get_variable("b2",shape=(self.config['n_labels']),initializer=tf.constant_initializer())
 
         x = embeddings
         cell = tf.contrib.rnn.BasicRNNCell(self.config['state_size'])

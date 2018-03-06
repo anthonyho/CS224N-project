@@ -20,7 +20,7 @@ config = {'exp_name': 'rnn_full_1',
           'n_epochs': 5,  # number of iterations
           'embed_size': 50,  # dimension of the inputs
           'n_features': 50,  # dimension of the inputs
-          'n_classes': 6,  # number of labels to predict
+          'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
 #          'n_layers': 1,  # number of hidden layers
           'state_size': 50,  # size of hidden layers; int or list of int
