@@ -15,7 +15,7 @@ import yaml
 
 max_comment_size = 250
 
-config = {'exp_name': 'rnn_full_1',
+config = {'exp_name': 'rnn_full_2',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
           'n_epochs': 50,  # number of iterations
           'embed_size': 300,  # dimension of the inputs
