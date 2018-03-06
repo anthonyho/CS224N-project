@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import preprocess
 import evaluate
 import rnn_model
 import yaml
 
-matplotlib.use('Agg')
 
 max_comment_size = 250
 

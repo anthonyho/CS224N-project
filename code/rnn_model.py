@@ -20,10 +20,12 @@ config = {
 class RNNModel(Model):
 
     def _add_placeholders(self):
-        self.input_placeholder = tf.placeholder(tf.int32, 
-            [None, self.config['max_comment_size']])
-        self.labels_placeholder = tf.placeholder(tf.float32, shape=(None, 6))
-        self.mask_placeholder = tf.placeholder(tf.bool,shape=(None,self.config['max_comment_size']))
+        self.input_placeholder = tf.placeholder(tf.int32,
+                                                shape=(None, self.config['max_comment_size']))
+        self.labels_placeholder = tf.placeholder(tf.float32,
+                                                 shape=(None, 6))
+        self.mask_placeholder = tf.placeholder(tf.bool,
+                                               shape=(None,self.config['max_comment_size']))
 
     def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None):
         feed_dict = {
