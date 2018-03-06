@@ -140,7 +140,7 @@ def run(config, data, emb_data, debug=False):
         y_score_test_df = pd.concat([id_test, y_score_test_df], axis=1)
         y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack
 
-def predict_from_params(inputs, config, emb_data, path_to_noext_file)
+def predict_from_params(inputs, config, emb_data, path_to_noext_file):
     tf.reset_default_graph()
     with tf.Graph().as_default() as graph:
         obj = nn_model.FeedForwardNeuralNetwork(config=config, emb_data=emb_data)
