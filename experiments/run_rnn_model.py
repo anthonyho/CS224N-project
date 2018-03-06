@@ -17,9 +17,9 @@ max_comment_size = 250
 
 config = {'exp_name': 'rnn_full_1',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 5,  # number of iterations
-          'embed_size': 50,  # dimension of the inputs
-          'n_features': 50,  # dimension of the inputs
+          'n_epochs': 50,  # number of iterations
+          'embed_size': 300,  # dimension of the inputs
+          'n_features': 300,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
 #          'n_layers': 1,  # number of hidden layers
@@ -37,7 +37,7 @@ config2 = {
 
 list_configs = [config]
 
-debug = 4000
+debug = False
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'
