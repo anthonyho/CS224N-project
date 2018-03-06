@@ -61,10 +61,12 @@ class RNNModel(Model):
         idx = tf.range(self.config['batch_size'])*tf.shape(outputs)[1] + (seq_lengths - 1)
         last_rnn_outputs = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
         
-        return tf.sigmoid(tf.matmul(last_rnn_outputs,U) + b2)
+        pred = tf.matmul(last_rnn_outputs,U) + b2
+        return pred
 
-    def _add_loss_op(self, preds):
-        loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=preds,labels=self.labels_placeholder)
+    def _add_loss_op(self, pred):
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=pred,
+                                                       labels=self.labels_placeholder)
         return tf.reduce_mean(loss)
 
     def _add_training_op(self, loss):
@@ -86,18 +88,19 @@ class RNNModel(Model):
         loss /= (i + 1)
         return loss
 
-    def train(self, sess, inputs, masks, labels, shuffle=True):
-        inputs = np.array(tokens_to_ids(inputs, self.word2id))
+    def train(self, sess, tokens, masks, labels, shuffle=True):
+        inputs = np.array(tokens_to_ids(tokens, self.word2id))
         list_loss = []
         for epoch in range(self.config['n_epochs']):
             list_loss.append(self._run_epoch(sess, inputs, masks, labels, shuffle))
         return list_loss
 
-    #def predict(self, sess, tokens):
-    #    feed = self._create_feed_dict(inputs)
-    #    pred = sess.run(self.pred, feed_dict=feed)
-    #    y_score = utils.sigmoid(pred)
-    #    return y_score
+    def predict(self, sess, tokens, masks):
+        inputs = np.array(tokens_to_ids(tokens, self.word2id))
+        feed = self._create_feed_dict(inputs, masks)
+        pred = sess.run(self.pred, feed_dict=feed)
+        y_score = utils.sigmoid(pred)
+        return y_score
 
     def save_weights(self, file_path):
         raise NotImplementedError()
