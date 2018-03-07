@@ -50,24 +50,31 @@ class RNNModel(Model):
         
         U = tf.get_variable("U",shape=(self.config['state_size'],self.config['n_labels']),initializer=tf.contrib.layers.xavier_initializer())
         b2 = tf.get_variable("b2",shape=(self.config['n_labels']),initializer=tf.constant_initializer())
-        # Create cell
+        # Create cells for each layer
         x = embeddings
-        if self.config['cell_type'] == 'RNN':
-            cell = tf.contrib.rnn.BasicRNNCell(self.config['state_size'], **self.config['cell_kwargs'])
-        elif self.config['cell_type'] == 'GRU':
-            cell = tf.contrib.rnn.GRUCell(self.config['state_size'], **self.config['cell_kwargs'])
-        elif self.config['cell_type'] == 'LSTM':
-            cell = tf.contrib.rnn.LSTMCell(self.config['state_size'], state_is_tuple=True, **self.config['cell_kwargs'])
-        else:
-            raise NotImplementedError
+        list_cells = []
+        for i in range(self.config['n_layers']):
+            if self.config['cell_type'] == 'RNN':
+                list_cells.append(tf.contrib.rnn.BasicRNNCell(self.config['state_size'],
+                                                              **self.config['cell_kwargs']))
+            elif self.config['cell_type'] == 'GRU':
+                list_cells.append(tf.contrib.rnn.GRUCell(self.config['state_size'],
+                                                         **self.config['cell_kwargs']))
+            elif self.config['cell_type'] == 'LSTM':
+                list_cells.append(tf.contrib.rnn.LSTMCell(self.config['state_size'],
+                                                          state_is_tuple=True,
+                                                          **self.config['cell_kwargs']))
+            else:
+                raise NotImplementedError
         # Add droput
         if self.config['dropout']:
-            cell = tf.contrib.rnn.DropoutWrapper(cell, **self.config['dropout_kwargs'])
+            list_cells = [tf.contrib.rnn.DropoutWrapper(cell, **self.config['dropout_kwargs'])
+                          for cell in list_cells]
         # Create layers
         if self.config['cell_type'] == 'LSTM':
-            multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'], state_is_tuple=True)
+            multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells, state_is_tuple=True)
         else:
-            multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'])
+            multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells)
         # Unroll
         if self.config['bidirectional']:
             outputs, state = tf.nn.bidirectional_dynamic_rnn(multi_cells, multi_cells, x, dtype=tf.float32)
