@@ -17,15 +17,15 @@ max_comment_size = 250
 
 config = {'exp_name': 'rnn_full_2',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 50,  # number of iterations
-          'embed_size': 300,  # dimension of the inputs
-          'n_features': 300,  # dimension of the inputs
+          'n_epochs': 10,  # number of iterations
+          'embed_size': 50,  # dimension of the inputs
+          'n_features': 50,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
           'batch_size': 2048,  # number of training examples in each minibatch
-          'cell': tf.contrib.rnn.LSTMCell,
+          'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
           'dropout_kwargs': {'input_keep_prob': 0.8,

@@ -15,7 +15,7 @@ config = {'exp_name': 'rnn_full_1',
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
           'batch_size': 2048,  # number of training examples in each minibatch
-          'cell': tf.contrib.rnn.LSTMCell,
+          'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
           'dropout_kwargs': {'input_keep_prob': 0.8,
@@ -52,12 +52,22 @@ class RNNModel(Model):
         b2 = tf.get_variable("b2",shape=(self.config['n_labels']),initializer=tf.constant_initializer())
         # Create cell
         x = embeddings
-        cell = self.config['cell'](self.config['state_size'], **self.config['cell_kwargs'])
+        if self.config['cell_type'] == 'RNN':
+            cell = tf.contrib.rnn.BasicRNNCell(self.config['state_size'], **self.config['cell_kwargs'])
+        elif self.config['cell_type'] == 'GRU':
+            cell = tf.contrib.rnn.GRUCell(self.config['state_size'], **self.config['cell_kwargs'])
+        elif self.config['cell_type'] == 'LSTM':
+            cell = tf.contrib.rnn.LSTMCell(self.config['state_size'], state_is_tuple=True, **self.config['cell_kwargs'])
+        else:
+            raise NotImplementedError
         # Add droput
         if self.config['dropout']:
             cell = tf.contrib.rnn.DropoutWrapper(cell, **self.config['dropout_kwargs'])
         # Create layers
-        multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'])
+        if self.config['cell_type'] == 'LSTM':
+            multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'], state_is_tuple=True)
+        else:
+            multi_cells = tf.contrib.rnn.MultiRNNCell([cell] * self.config['n_layers'])
         # Unroll
         if self.config['bidirectional']:
             outputs, state = tf.nn.bidirectional_dynamic_rnn(multi_cells, multi_cells, x, dtype=tf.float32)
