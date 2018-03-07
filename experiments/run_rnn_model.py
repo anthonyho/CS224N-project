@@ -15,16 +15,16 @@ import yaml
 
 max_comment_size = 250
 
-config = {'exp_name': 'rnn_full_2',
+config = {'exp_name': 'rnn_full_3',
           'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 10,  # number of iterations
-          'embed_size': 50,  # dimension of the inputs
-          'n_features': 50,  # dimension of the inputs
+          'n_epochs': 50,  # number of iterations
+          'embed_size': 300,  # dimension of the inputs
+          'n_features': 300,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
-          'batch_size': 2048,  # number of training examples in each minibatch
+          'batch_size': 1024,  # number of training examples in each minibatch
           'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
@@ -41,7 +41,7 @@ config2 = {
 
 list_configs = [config]
 
-debug = 4000
+debug = False
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'
