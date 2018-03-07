@@ -13,35 +13,10 @@ import rnn_model
 import yaml
 
 
+# Define global variables
+embed_size = 50
+label_names = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
 max_comment_size = 250
-
-config = {'exp_name': 'rnn_full_3',
-          'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 50,  # number of iterations
-          'embed_size': 300,  # dimension of the inputs
-          'n_features': 300,  # dimension of the inputs
-          'n_labels': 6,  # number of labels to predict
-          'max_comment_size'  : max_comment_size,
-          'state_size': 50,  # size of hidden layers; int
-          'lr': .001,  # learning rate
-          'batch_size': 1024,  # number of training examples in each minibatch
-          'cell_type': 'LSTM',
-          'cell_kwargs': {},
-          'dropout': True,
-          'dropout_kwargs': {'input_keep_prob': 0.8,
-                             'output_keep_prob': 0.8,
-                             'state_keep_prob': 0.8},
-          'n_layers': 2,
-          'bidirectional': False
-          }
-
-config2 = {
-
-}
-
-list_configs = [config]
-
-debug = False
 
 train_data_file = '../data/train.csv'
 train_tokens_file = '../data/train_comments.p'
@@ -52,12 +27,41 @@ test_tokens_file = '../data/test_comments.p'
 out_dir = 'out/'
 
 
-def load_and_process(config, train_data_file, test_data_file=None,
+# Define configs
+debug = 4000
+
+config = {'exp_name': 'rnn_full_3',
+          'n_epochs': 2,  # number of iterations
+          'embed_size': embed_size,  # dimension of the inputs
+          'n_labels': 6,  # number of labels to predict
+          'max_comment_size'  : max_comment_size,
+          'state_size': 50,  # size of hidden layers; int
+          'lr': .001,  # learning rate
+          'batch_size': 1024,  # number of training examples in each minibatch
+          'cell_type': 'RNN',
+          'cell_kwargs': {},
+          'dropout': True,
+          'dropout_kwargs': {'input_keep_prob': 0.8,
+                             'output_keep_prob': 0.8,
+                             'state_keep_prob': 0.8},
+          'n_layers': 1,
+          'bidirectional': False, # not functional yet
+          'averaging': False # not functional yet
+          }
+
+config2 = {
+
+}
+
+list_configs = [config]
+
+
+def load_and_process(train_data_file, test_data_file=None,
                      train_tokens_file=None, test_tokens_file=None,
                      debug=False):
 
     # Get glove/w2v data
-    emb_data = preprocess.get_glove(config['n_features'])
+    emb_data = preprocess.get_glove(embed_size)
 
     # Load and (optionally) subset train data
     train_data = preprocess.load_data(train_data_file)
@@ -75,27 +79,24 @@ def load_and_process(config, train_data_file, test_data_file=None,
 
     # Tokenize train comments or load pre-tokenized train comments
     if debug or (train_tokens_file is None):
-#        inputs = preprocess.tokenize_df(train_data)
         inputs, masks = preprocess.tokenize_df(train_data, target_length=max_comment_size)
     else:
-        inputs = preprocess.load_tokenized_comments(train_tokens_file)
+        inputs = preprocess.load_tokenized_comments(train_tokens_file) # <- to be fixed
     # Tokenize test comments or load pre-tokenized test comments
     if test_data_file:
         if test_tokens_file is None:
-#            inputs_test = preprocess.tokenize_df(test_data)
             inputs_test, masks_test = preprocess.tokenize_df(test_data, target_length=max_comment_size)
         else:
-            inputs_test = preprocess.load_tokenized_comments(test_tokens_file)
+            inputs_test = preprocess.load_tokenized_comments(test_tokens_file) # <- to be fixed
     else:
         inputs_test = None
 
     # Load train labels
-    labels = preprocess.filter_labels(train_data, config['label_names'])
+    labels = preprocess.filter_labels(train_data, label_names)
 
     # Split to train and dev sets
     inputs_train, labels_train, masks_train, inputs_dev, labels_dev, masks_dev = preprocess.split_train_dev(inputs, labels, masks,
                                                                                                             fraction_dev=0.3)
-
 
     return (inputs_train, labels_train, masks_train,
             inputs_dev, labels_dev, masks_dev,
@@ -108,7 +109,6 @@ def run(config, data, emb_data, debug=False):
     (inputs_train, labels_train, masks_train,
      inputs_dev, labels_dev, masks_dev,
      id_test, inputs_test, masks_test) = data
-#    (inputs_train, labels_train, inputs_dev, labels_dev, inputs_test, id_test) = data
 
     # Initialize graph
     tf.reset_default_graph()
@@ -157,7 +157,7 @@ def run(config, data, emb_data, debug=False):
     if inputs_test:
         y_score_test_df = pd.DataFrame(y_score_test, columns=config['label_names'])
         y_score_test_df = pd.concat([id_test, y_score_test_df], axis=1)
-        y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack
+        y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack, to be fixed
 
 def predict_from_params(inputs, config, emb_data, path_to_noext_file):
     tf.reset_default_graph()
@@ -175,6 +175,6 @@ def predict_from_params(inputs, config, emb_data, path_to_noext_file):
     return scores
 
 if __name__ == '__main__':
-    data, emb_data = load_and_process(config, train_data_file, test_data_file,
-                                      debug=debug)
-    run(config, data, emb_data, debug=debug)
+    data, emb_data = load_and_process(train_data_file, test_data_file, debug=debug)
+    for config in list_configs:
+        run(config, data, emb_data, debug=debug)
