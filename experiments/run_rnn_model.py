@@ -146,16 +146,16 @@ def run(config, data, emb_data, debug=False):
         f.write('\n')
         f.write('Final loss = {:.4f}\n'.format(list_loss[-1]))
     evaluate.plot_loss(list_loss, save_prefix=save_prefix)
-    results_roc = evaluate.evaluate_full(y_dict, metric='roc', names=config['label_names'],
+    results_roc = evaluate.evaluate_full(y_dict, metric='roc', names=label_names,
                                          print_msg=True, save_msg=True, plot=True,
                                          save_prefix=save_prefix)
-    results_prc = evaluate.evaluate_full(y_dict, metric='prc', names=config['label_names'],
+    results_prc = evaluate.evaluate_full(y_dict, metric='prc', names=label_names,
                                          print_msg=True, save_msg=True, plot=True,
                                          save_prefix=save_prefix)
 
     # Save y_score_test to csv
     if inputs_test:
-        y_score_test_df = pd.DataFrame(y_score_test, columns=config['label_names'])
+        y_score_test_df = pd.DataFrame(y_score_test, columns=label_names)
         y_score_test_df = pd.concat([id_test, y_score_test_df], axis=1)
         y_score_test_df.fillna(0.5).to_csv(save_prefix+'_test.csv', index=False) # quick hack, to be fixed
 
