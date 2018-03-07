@@ -14,7 +14,7 @@ config = {'exp_name': 'rnn_full_1',
           'max_comment_size'  : 250,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
-          'batch_size': 2048,  # number of training examples in each minibatch
+          'batch_size': 1024,  # number of training examples in each minibatch
           'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
@@ -22,7 +22,8 @@ config = {'exp_name': 'rnn_full_1',
                              'output_keep_prob': 0.8,
                              'state_keep_prob': 0.8},
           'n_layers': 2,
-          'bidirectional': False
+          'bidirectional': False,
+          'averaging': True
           }
 
 
@@ -34,7 +35,7 @@ class RNNModel(Model):
         self.labels_placeholder = tf.placeholder(tf.float32,
                                                  shape=(None, self.config['n_labels']))
         self.mask_placeholder = tf.placeholder(tf.bool,
-                                               shape=(None,self.config['max_comment_size']))
+                                               shape=(None, self.config['max_comment_size']))
 
     def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None):
         feed_dict = {self.input_placeholder: inputs_batch,
@@ -44,14 +45,17 @@ class RNNModel(Model):
         return feed_dict
 
     def _add_prediction_op(self):
+        # Transform ids to embeddings
         embed_matrix = tf.Variable(self.emb_matrix.astype('float32'))
         embeddings2 = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
         embeddings = tf.reshape(embeddings2, (-1, self.config['max_comment_size'], self.config['embed_size']))
-        
-        U = tf.get_variable("U",shape=(self.config['state_size'],self.config['n_labels']),initializer=tf.contrib.layers.xavier_initializer())
-        b2 = tf.get_variable("b2",shape=(self.config['n_labels']),initializer=tf.constant_initializer())
-        # Create cells for each layer
+        # Declare variable
+        U = tf.get_variable("U", shape=(self.config['state_size'],self.config['n_labels']),
+                            initializer=tf.contrib.layers.xavier_initializer())
+        b2 = tf.get_variable("b2", shape=(self.config['n_labels']),
+                             initializer=tf.constant_initializer())
         x = embeddings
+        # Create cells for each layer
         list_cells = []
         for i in range(self.config['n_layers']):
             if self.config['cell_type'] == 'RNN':
@@ -77,14 +81,27 @@ class RNNModel(Model):
             multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells)
         # Unroll
         if self.config['bidirectional']:
-            outputs, state = tf.nn.bidirectional_dynamic_rnn(multi_cells, multi_cells, x, dtype=tf.float32)
+            outputs, state = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(multi_cells, multi_cells,
+                                                                            x, dtype=tf.float32) # untested?
         else:
             outputs, state = tf.nn.dynamic_rnn(multi_cells, x, dtype=tf.float32)
+        # 
         seq_lengths = tf.reduce_sum(tf.cast(self.mask_placeholder, tf.int32), axis=1)
-        idx = tf.range(tf.shape(self.input_placeholder)[0])*tf.shape(outputs)[1] + (seq_lengths - 1)
-        last_rnn_outputs = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
+        # Averaging
+        if self.config['averaging']:
+            list_mean_outputs = []
+            for i in range(self.input_placeholder.get_shape().as_list()[0]):
+                # Shape of output = (batch_size, max_length, state_size)
+                curr_valid_outputs = outputs[i, 0:seq_lengths[i], :]
+                curr_mean_output = tf.reduce_mean(curr_valid_outputs, axis=0)
+                list_mean_outputs.append(curr_mean_output)
+            final_output = tf.stack(list_mean_outputs)
+        else:
+            # old for last ind
+            idx = tf.range(tf.shape(self.input_placeholder)[0]) * tf.shape(outputs)[1] + (seq_lengths - 1)
+            final_output = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
         
-        pred = tf.matmul(last_rnn_outputs,U) + b2
+        pred = tf.matmul(final_output, U) + b2
         return pred
 
     def _add_loss_op(self, pred):
