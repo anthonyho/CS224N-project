@@ -26,6 +26,8 @@ config = {'exp_name': 'rnn_full_1',
           'averaging': True
           }
 
+class_weights = np.array([ 1.0,  9.58871448,  1.810155  , 31.99581504,  1.94160208,
+       10.88540896])
 
 class RNNModel(Model):
 
@@ -107,7 +109,7 @@ class RNNModel(Model):
     def _add_loss_op(self, pred):
         loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=pred,
                                                        labels=self.labels_placeholder)
-        return tf.reduce_mean(loss)
+        return tf.reduce_mean(loss*class_weights)
 
     def _add_training_op(self, loss):
         optimizer = tf.train.AdamOptimizer(learning_rate=self.config['lr'])
