@@ -14,7 +14,7 @@ import yaml
 
 
 # Define global variables
-embed_size = 300
+embed_size = 50
 label_names = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
 max_comment_size = 250
 
@@ -28,10 +28,10 @@ out_dir = 'out/'
 
 
 # Define configs
-debug = False
+debug = 4000
 
-config = {'exp_name': 'rnn_full_9_newloss',
-          'n_epochs': 50,  # number of iterations
+config = {'exp_name': 'rnn_full_1',
+          'n_epochs': 2,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
@@ -41,51 +41,15 @@ config = {'exp_name': 'rnn_full_9_newloss',
           'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
-          'dropout_kwargs': {'input_keep_prob': 0.5,
-                             'output_keep_prob': 0.5,
-                             'state_keep_prob': 0.5},
-          'n_layers': 2,
-          'bidirectional': False, # not functional yet
-          'averaging': False # not functional yet
+          'dropout_rate': 0.5,
+          'n_layers': 1,
+          'bidirectional': True,
+          'averaging': True
           }
 
-config2 = {'exp_name': 'rnn_full_7',
-          'n_epochs': 50,  # number of iterations
-          'embed_size': embed_size,  # dimension of the inputs
-          'n_labels': 6,  # number of labels to predict
-          'max_comment_size'  : max_comment_size,
-          'state_size': 25,  # size of hidden layers; int
-          'lr': .001,  # learning rate
-          'batch_size': 1024,  # number of training examples in each minibatch
-          'cell_type': 'LSTM',
-          'cell_kwargs': {},
-          'dropout': True,
-          'dropout_kwargs': {'input_keep_prob': 0.2,
-                             'output_keep_prob': 0.2,
-                             'state_keep_prob': 0.2},
-          'n_layers': 2,
-          'bidirectional': False, # not functional yet
-          'averaging': False # not functional yet
-          }
+config2 = {
 
-config3 = {'exp_name': 'rnn_full_5',
-          'n_epochs': 50,  # number of iterations
-          'embed_size': embed_size,  # dimension of the inputs
-          'n_labels': 6,  # number of labels to predict
-          'max_comment_size'  : max_comment_size,
-          'state_size': 50,  # size of hidden layers; int
-          'lr': .001,  # learning rate
-          'batch_size': 1024,  # number of training examples in each minibatch
-          'cell_type': 'GRU',
-          'cell_kwargs': {},
-          'dropout': True,
-          'dropout_kwargs': {'input_keep_prob': 0.8,
-                             'output_keep_prob': 0.8,
-                             'state_keep_prob': 0.8},
-          'n_layers': 2,
-          'bidirectional': False, # not functional yet
-          'averaging': False # not functional yet
-          }
+}
 
 list_configs = [config]
 
