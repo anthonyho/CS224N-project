@@ -173,7 +173,9 @@ def run(config, data, emb_data, debug=False):
     # Fit
     with tf.Session(graph=graph) as sess:
         sess.run(init_op)
-        list_loss = obj.train(sess, inputs_train, masks_train, labels_train)
+        list_train_loss, list_dev_loss  = obj.train(sess,
+                                                    inputs_train, masks_train, labels_train,
+                                                    inputs_dev, masks_dev, labels_dev)
         saver.save(sess,save_prefix)
         y_score_train = obj.predict(sess, inputs_train, masks_train)
         y_score_dev = obj.predict(sess, inputs_dev, masks_dev)
@@ -185,12 +187,14 @@ def run(config, data, emb_data, debug=False):
               'dev': (labels_dev, y_score_dev)}
 
     # Evaluate, plot and save
-    print 'Final loss = {:.4f}'.format(list_loss[-1])
+    print 'Final train loss = {:.4f}'.format(list_train_loss[-1])
+    print 'Final dev loss = {:.4f}'.format(list_dev_loss[-1])
     with open(save_prefix+'.txt', 'w') as f:
         yaml.dump(config, f)
         f.write('\n')
-        f.write('Final loss = {:.4f}\n'.format(list_loss[-1]))
-    evaluate.plot_loss(list_loss, save_prefix=save_prefix)
+        f.write('Final train loss = {:.4f}\n'.format(list_train_loss[-1]))
+        f.write('Final dev loss = {:.4f}\n'.format(list_dev_loss[-1]))
+    evaluate.plot_loss(list_train_loss, list_dev_loss, save_prefix=save_prefix)
     results_roc = evaluate.evaluate_full(y_dict, metric='roc', names=label_names,
                                          print_msg=True, save_msg=True, plot=True,
                                          save_prefix=save_prefix)

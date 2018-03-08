@@ -142,7 +142,7 @@ class RNNModel(Model):
         loss = 0
         for i, (inputs_batch, masks_batch, labels_batch) in enumerate(minibatches):
             loss += self._train_on_batch(sess, inputs_batch, masks_batch, labels_batch)
-            prog.update(i+1,[('train_loss', loss)], force=i+1 == n_minibatches)
+            prog.update(i+1, [('train_loss', loss)], force=i+1 == n_minibatches)
         loss /= (i + 1)
         return loss
 
@@ -189,15 +189,3 @@ class RNNModel(Model):
             list_y_score.append(self._predict_on_batch(sess, inputs_batch, masks_batch))
         y_score = np.vstack(list_y_score)
         return y_score
-
-    def save_weights(self, file_path):
-        raise NotImplementedError()
-
-    def load_weights(self, file_path):
-        raise NotImplementedError()
-
-    def build(self):
-        self._add_placeholders()
-        self.pred = self._add_prediction_op()
-        self.loss = self._add_loss_op(self.pred)
-        self.train_op = self._add_training_op(self.loss)
