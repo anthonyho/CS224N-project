@@ -88,7 +88,8 @@ class FeedForwardNeuralNetwork(Model):
         loss = 0
         for i, (inputs_batch, labels_batch) in enumerate(minibatches):
             loss += self._train_on_batch(sess, inputs_batch, labels_batch)
-            prog.update(i+1,[('train_loss', loss)], force=i+1 == n_minibatches)
+            prog.update(i+1, [('train_loss', loss)],
+                        force=i+1 == n_minibatches)
         loss /= (i + 1)
         return loss
 
