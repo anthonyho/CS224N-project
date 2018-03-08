@@ -1,0 +1,40 @@
+batch_size: 2048
+embed_size: 50
+exp_name: rnn_full_1
+label_names: [toxic, severe_toxic, obscene, threat, insult, identity_hate]
+lr: 0.001
+max_comment_size: 250
+n_classes: 6
+n_epochs: 5
+n_features: 50
+state_size: 50
+
+Final loss = 0.4178
+Mean column-wise ROC AUC - train = 0.5436
+Mean column-wise ROC AUC - dev = 0.4981
+ROC AUC of toxic - train = 0.5328
+ROC AUC of toxic - dev = 0.5078
+ROC AUC of severe_toxic - train = 0.4972
+ROC AUC of severe_toxic - dev = 0.5983
+ROC AUC of obscene - train = 0.5917
+ROC AUC of obscene - dev = 0.5497
+ROC AUC of threat - train = 0.5438
+ROC AUC of threat - dev = 0.4074
+ROC AUC of insult - train = 0.5346
+ROC AUC of insult - dev = 0.5408
+ROC AUC of identity_hate - train = 0.5617
+ROC AUC of identity_hate - dev = 0.3846
+Mean column-wise average precision - train = 0.0493
+Mean column-wise average precision - dev = 0.0486
+average precision of toxic - train = 0.1156
+average precision of toxic - dev = 0.1098
+average precision of severe_toxic - train = 0.0114
+average precision of severe_toxic - dev = 0.0274
+average precision of obscene - train = 0.0783
+average precision of obscene - dev = 0.0768
+average precision of threat - train = 0.0047
+average precision of threat - dev = 0.0054
+average precision of insult - train = 0.0702
+average precision of insult - dev = 0.0613
+average precision of identity_hate - train = 0.0154
+average precision of identity_hate - dev = 0.0108
