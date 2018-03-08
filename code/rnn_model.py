@@ -1,41 +1,37 @@
+import numpy as np
 import tensorflow as tf
 from preprocess import get_glove, tokens_to_ids
 from model import Model
 import utils
-import numpy as np
 
 
-config = {'exp_name': 'rnn_full_1',
-          'label_names': ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate'],
-          'n_epochs': 50,  # number of iterations
-          'embed_size': 300,  # dimension of the inputs
-          'n_features': 300,  # dimension of the inputs
-          'n_labels': 6,  # number of labels to predict
-          'max_comment_size'  : 250,
-          'state_size': 50,  # size of hidden layers; int
-          'lr': .001,  # learning rate
-          'batch_size': 1024,  # number of training examples in each minibatch
-          'cell_type': 'LSTM',
-          'cell_kwargs': {},
-          'dropout': True,
-          'dropout_kwargs': {'input_keep_prob': 0.8,
-                             'output_keep_prob': 0.8,
-                             'state_keep_prob': 0.8},
-          'n_layers': 2,
-          'bidirectional': False,
-          'averaging': True
-          }
+example_config = {'exp_name': 'rnn_full_1',
+                  'n_epochs': 50,  # number of iterations
+                  'embed_size': 300,  # dimension of the inputs
+                  'n_labels': 6,  # number of labels to predict
+                  'max_comment_size'  : 250,
+                  'state_size': 50,  # size of hidden layers; int
+                  'lr': .001,  # learning rate
+                  'batch_size': 1024,  # number of training examples in each minibatch
+                  'cell_type': 'LSTM',
+                  'cell_kwargs': {},
+                  'dropout': True,
+                  'dropout_rate': 0.5,
+                  'n_layers': 2,
+                  'bidirectional': True,
+                  'averaging': True
+                  }
 
 
 class RNNModel(Model):
 
     def _add_placeholders(self):
-        self.input_placeholder = tf.placeholder(tf.int32,
-                                                shape=(None, self.config['max_comment_size']))
-        self.labels_placeholder = tf.placeholder(tf.float32,
-                                                 shape=(None, self.config['n_labels']))
-        self.mask_placeholder = tf.placeholder(tf.bool,
-                                               shape=(None, self.config['max_comment_size']))
+        input_shape = (None, self.config['max_comment_size'])
+        labels_shape = (None, self.config['n_labels'])
+        mask_shape = (None, self.config['max_comment_size'])
+        self.input_placeholder = tf.placeholder(tf.int32, shape=input_shape)
+        self.labels_placeholder = tf.placeholder(tf.float32, shape=labels_shape)
+        self.mask_placeholder = tf.placeholder(tf.bool, shape=mask_shape)
 
     def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None):
         feed_dict = {self.input_placeholder: inputs_batch,
@@ -46,15 +42,14 @@ class RNNModel(Model):
 
     def _add_prediction_op(self):
         # Transform ids to embeddings
-        embed_matrix = tf.Variable(self.emb_matrix.astype('float32'))
-        embeddings2 = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
-        embeddings = tf.reshape(embeddings2, (-1, self.config['max_comment_size'], self.config['embed_size']))
+        embed_matrix = tf.Variable(self.emb_matrix)
+        embedded = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
+        x = tf.reshape(embedded, (-1, self.config['max_comment_size'], self.config['embed_size']))
         # Declare variable
-        U = tf.get_variable("U", shape=(self.config['state_size'],self.config['n_labels']),
+        U = tf.get_variable('U', shape=(self.config['state_size'], self.config['n_labels']),
                             initializer=tf.contrib.layers.xavier_initializer())
-        b2 = tf.get_variable("b2", shape=(self.config['n_labels']),
+        b2 = tf.get_variable('b2', shape=(self.config['n_labels']),
                              initializer=tf.constant_initializer())
-        x = embeddings
         # Create cells for each layer
         list_cells = []
         for i in range(self.config['n_layers']):
@@ -69,40 +64,48 @@ class RNNModel(Model):
                                                           state_is_tuple=True,
                                                           **self.config['cell_kwargs']))
             else:
-                raise NotImplementedError
-        # Add droput
-        if self.config['dropout']:
-            list_cells = [tf.contrib.rnn.DropoutWrapper(cell, **self.config['dropout_kwargs'])
-                          for cell in list_cells]
-        # Create layers
-        if self.config['cell_type'] == 'LSTM':
-            multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells, state_is_tuple=True)
-        else:
-            multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells)
-        # Unroll
+                raise NotImplementedError()
+        # Unroll timesteps
         if self.config['bidirectional']:
-            outputs, state = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(multi_cells, multi_cells,
-                                                                            x, dtype=tf.float32) # untested?
+            # Shape of outputs = (batch_size, max_length, state_size * 2)
+            outputs, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(list_cells, list_cells,
+                                                                           x, dtype=tf.float32)
+            final_output_fw = self._agg_outputs(outputs[:, :, :self.config['state_size']],
+                                                self.config['averaging'])
+            final_output_bw = self._agg_outputs(outputs[:, :, self.config['state_size']:],
+                                                self.config['averaging'])
+            final_output = (final_output_fw + final_output_bw) / 2
         else:
+            # Create layers using MultiRNNCell()
+            if self.config['cell_type'] == 'LSTM':
+                multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells, state_is_tuple=True)
+            else:
+                multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells)
+            # Shape of outputs = (batch_size, max_length, state_size)
             outputs, state = tf.nn.dynamic_rnn(multi_cells, x, dtype=tf.float32)
-        # 
-        seq_lengths = tf.reduce_sum(tf.cast(self.mask_placeholder, tf.int32), axis=1)
-        # Averaging
-        if self.config['averaging']:
-            list_mean_outputs = []
-            for i in range(self.input_placeholder.get_shape().as_list()[0]):
-                # Shape of output = (batch_size, max_length, state_size)
-                curr_valid_outputs = outputs[i, 0:seq_lengths[i], :]
-                curr_mean_output = tf.reduce_mean(curr_valid_outputs, axis=0)
-                list_mean_outputs.append(curr_mean_output)
-            final_output = tf.stack(list_mean_outputs)
+            final_output = self._agg_outputs(outputs, self.config['averaging'])
+        # Add droput layer
+        if self.config['dropout']:
+            final_output_dropout = tf.nn.dropout(final_output, self.config['dropout_rate'])
         else:
-            # old for last ind
-            idx = tf.range(tf.shape(self.input_placeholder)[0]) * tf.shape(outputs)[1] + (seq_lengths - 1)
-            final_output = tf.gather(tf.reshape(outputs, [-1, self.config['state_size']]), idx)
-        
-        pred = tf.matmul(final_output, U) + b2
+            final_output_dropout = final_output
+        # Final layer
+        pred = tf.matmul(final_output_dropout, U) + b2
         return pred
+
+    def _agg_outputs(self, outputs, averaging=True):
+        if averaging:
+            mask = tf.cast(self.mask_placeholder, tf.float32)
+            n_words = tf.reduce_sum(mask, axis=1, keepdims=True)
+            mask_stack = tf.stack([mask] * outputs.shape[-1], axis=-1)
+            sum_outputs = tf.reduce_sum(outputs * mask_stack, axis=1)
+            final_output = sum_outputs / n_words
+        else:
+            mask = tf.cast(self.mask_placeholder, tf.int32)
+            n_words = tf.reduce_sum(mask, axis=1)
+            idx = tf.range(tf.shape(self.input_placeholder)[0]) * tf.shape(outputs)[1] + (n_words - 1)
+            final_output = tf.gather(tf.reshape(outputs, (-1, self.config['state_size'])), idx)
+        return final_output
 
     def _add_loss_op(self, pred):
         loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=pred,

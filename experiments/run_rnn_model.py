@@ -30,7 +30,7 @@ out_dir = 'out/'
 # Define configs
 debug = 4000
 
-config = {'exp_name': 'rnn_full_3',
+config = {'exp_name': 'rnn_full_1',
           'n_epochs': 2,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
@@ -38,15 +38,13 @@ config = {'exp_name': 'rnn_full_3',
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
           'batch_size': 1024,  # number of training examples in each minibatch
-          'cell_type': 'RNN',
+          'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
-          'dropout_kwargs': {'input_keep_prob': 0.8,
-                             'output_keep_prob': 0.8,
-                             'state_keep_prob': 0.8},
+          'dropout_rate': 0.5,
           'n_layers': 1,
-          'bidirectional': False, # not functional yet
-          'averaging': False # not functional yet
+          'bidirectional': True,
+          'averaging': True
           }
 
 config2 = {

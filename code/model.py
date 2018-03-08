@@ -7,12 +7,13 @@ class Model(object):
     def __init__(self, config=None, emb_data=None, glove_dim=None):
         # Load word embedding data from memory if already loaded
         if emb_data is not None:
-            self.emb_matrix = emb_data[0]
+            self.emb_matrix = emb_data[0].astype('float32')
             self.word2id = emb_data[1]
             self.id2word = emb_data[2]
         # Load glove data from file
         elif glove_dim is not None:
             self.emb_matrix, self.word2id, self.id2word = get_glove(glove_dim)
+            self.emb_matrix = self.emb_matrix.astype('float32')
         # Load config and build
         self.config = config
         self.build()
