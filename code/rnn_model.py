@@ -16,7 +16,7 @@ example_config = {'exp_name': 'rnn_full_1',
                   'cell_type': 'LSTM',
                   'cell_kwargs': {},
                   'dropout': True,
-                  'dropout_rate': 0.5,
+                  'keep_prob': 0.5,
                   'n_layers': 2,
                   'bidirectional': True,
                   'averaging': True
@@ -88,7 +88,7 @@ class RNNModel(Model):
             final_output = self._agg_outputs(outputs, self.config['averaging'])
         # Add droput layer
         if self.config['dropout']:
-            final_output_dropout = tf.nn.dropout(final_output, self.config['dropout_rate'])
+            final_output_dropout = tf.nn.dropout(final_output, self.config['keep_prob'])
         else:
             final_output_dropout = final_output
         # Final layer
@@ -176,9 +176,9 @@ class RNNModel(Model):
                                                          inputs_dev, masks_dev, labels_dev,
                                                          shuffle))
         if tokens_dev is not None:
-            return list_train_loss
-        else:
             return list_train_loss, list_dev_loss
+        else:
+            return list_train_loss
 
     def predict(self, sess, tokens, masks):
         inputs = np.array(tokens_to_ids(tokens, self.word2id))

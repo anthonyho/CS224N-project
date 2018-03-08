@@ -41,7 +41,7 @@ config = {'exp_name': 'rnn_full_1',
           'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
-          'dropout_rate': 0.5,
+          'keep_prob': 0.5,
           'n_layers': 1,
           'bidirectional': False,
           'averaging': False
