@@ -2,6 +2,13 @@ import tensorflow as tf
 from preprocess import get_glove
 
 
+class Config(object):
+
+    def __init__(self, config):
+        for key, value in config.items():
+            setattr(self, key, value)
+
+
 class Model(object):
 
     def __init__(self, config=None, emb_data=None, glove_dim=None):
@@ -15,7 +22,7 @@ class Model(object):
             self.emb_matrix, self.word2id, self.id2word = get_glove(glove_dim)
             self.emb_matrix = self.emb_matrix.astype('float32')
         # Load config and build
-        self.config = config
+        self.config = Config(config)
         self.build()
 
     def _add_placeholders(self):

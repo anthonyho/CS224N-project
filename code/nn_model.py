@@ -22,8 +22,8 @@ example_config = {'exp_name': 'ff_l2_h20_f50',
 class FeedForwardNeuralNetwork(Model):
 
     def _add_placeholders(self):
-        input_shape = (None, self.config['n_features'])
-        labels_shape = (None, self.config['n_labels'])
+        input_shape = (None, self.config.n_features)
+        labels_shape = (None, self.config.n_labels)
         self.input_placeholder = tf.placeholder(tf.float32,
                                                 shape=input_shape)
         self.labels_placeholder = tf.placeholder(tf.float32,
@@ -37,14 +37,14 @@ class FeedForwardNeuralNetwork(Model):
 
     def _add_prediction_op(self):
         try:
-            sizes = list(self.config['hidden_sizes'])
+            sizes = list(self.config.hidden_sizes)
         except TypeError:
-            sizes = [self.config['hidden_sizes']] * self.config['n_layers']
-        assert len(sizes) == self.config['n_layers']
-        sizes = [self.config['n_features']] + sizes + [self.config['n_labels']]
+            sizes = [self.config.hidden_sizes] * self.config.n_layers
+        assert len(sizes) == self.config.n_layers
+        sizes = [self.config.n_features] + sizes + [self.config.n_labels]
 
-        activation = self.config['activation']
-        initializer = self.config['initializer']
+        activation = self.config.activation
+        initializer = self.config.initializer
 
         h = self.input_placeholder
 
@@ -71,7 +71,7 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def _add_training_op(self, loss):
-        opt = self.config['optimizer'](learning_rate=self.config['lr'])
+        opt = self.config.optimizer(learning_rate=self.config.lr)
         train_op = opt.minimize(loss)
         return train_op
 
@@ -81,9 +81,9 @@ class FeedForwardNeuralNetwork(Model):
         return loss
 
     def _run_epoch(self, sess, inputs, labels, shuffle):
-        n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
+        n_minibatches = 1 + int(len(inputs) / self.config.batch_size)
         prog = tf.keras.utils.Progbar(target=n_minibatches)
-        minibatches = utils.minibatch(self.config['batch_size'],
+        minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=labels, shuffle=shuffle)
         loss = 0
         for i, (inputs_batch, labels_batch) in enumerate(minibatches):
@@ -99,7 +99,7 @@ class FeedForwardNeuralNetwork(Model):
     def train(self, sess, tokens, labels, shuffle=True):
         inputs = self._transform_inputs(tokens)
         list_loss = []
-        for epoch in range(self.config['n_epochs']):
+        for epoch in range(self.config.n_epochs):
             list_loss.append(self._run_epoch(sess, inputs, labels, shuffle))
         return list_loss
 

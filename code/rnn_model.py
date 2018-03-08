@@ -28,9 +28,9 @@ class_weights = np.array([ 1.0,  9.58871448,  1.810155  , 31.99581504,  1.941602
 class RNNModel(Model):
 
     def _add_placeholders(self):
-        input_shape = (None, self.config['max_comment_size'])
-        labels_shape = (None, self.config['n_labels'])
-        mask_shape = (None, self.config['max_comment_size'])
+        input_shape = (None, self.config.max_comment_size)
+        labels_shape = (None, self.config.n_labels)
+        mask_shape = (None, self.config.max_comment_size)
         self.input_placeholder = tf.placeholder(tf.int32, shape=input_shape)
         self.labels_placeholder = tf.placeholder(tf.float32, shape=labels_shape)
         self.mask_placeholder = tf.placeholder(tf.bool, shape=mask_shape)
@@ -46,49 +46,49 @@ class RNNModel(Model):
         # Transform ids to embeddings
         embed_matrix = tf.Variable(self.emb_matrix)
         embedded = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
-        x = tf.reshape(embedded, (-1, self.config['max_comment_size'], self.config['embed_size']))
+        x = tf.reshape(embedded, (-1, self.config.max_comment_size, self.config.embed_size))
         # Declare variable
-        U = tf.get_variable('U', shape=(self.config['state_size'], self.config['n_labels']),
+        U = tf.get_variable('U', shape=(self.config.state_size, self.config.n_labels),
                             initializer=tf.contrib.layers.xavier_initializer())
-        b2 = tf.get_variable('b2', shape=(self.config['n_labels']),
+        b2 = tf.get_variable('b2', shape=(self.config.n_labels),
                              initializer=tf.constant_initializer())
         # Create cells for each layer
         list_cells = []
-        for i in range(self.config['n_layers']):
-            if self.config['cell_type'] == 'RNN':
-                list_cells.append(tf.contrib.rnn.BasicRNNCell(self.config['state_size'],
-                                                              **self.config['cell_kwargs']))
-            elif self.config['cell_type'] == 'GRU':
-                list_cells.append(tf.contrib.rnn.GRUCell(self.config['state_size'],
-                                                         **self.config['cell_kwargs']))
-            elif self.config['cell_type'] == 'LSTM':
-                list_cells.append(tf.contrib.rnn.LSTMCell(self.config['state_size'],
+        for i in range(self.config.n_layers):
+            if self.config.cell_type == 'RNN':
+                list_cells.append(tf.contrib.rnn.BasicRNNCell(self.config.state_size,
+                                                              **self.config.cell_kwargs))
+            elif self.config.cell_type == 'GRU':
+                list_cells.append(tf.contrib.rnn.GRUCell(self.config.state_size,
+                                                         **self.config.cell_kwargs))
+            elif self.config.cell_type == 'LSTM':
+                list_cells.append(tf.contrib.rnn.LSTMCell(self.config.state_size,
                                                           state_is_tuple=True,
-                                                          **self.config['cell_kwargs']))
+                                                          **self.config.cell_kwargs))
             else:
                 raise NotImplementedError()
         # Unroll timesteps
-        if self.config['bidirectional']:
+        if self.config.bidirectional:
             # Shape of outputs = (batch_size, max_length, state_size * 2)
             outputs, _, _ = tf.contrib.rnn.stack_bidirectional_dynamic_rnn(list_cells, list_cells,
                                                                            x, dtype=tf.float32)
-            final_output_fw = self._agg_outputs(outputs[:, :, :self.config['state_size']],
-                                                self.config['averaging'])
-            final_output_bw = self._agg_outputs(outputs[:, :, self.config['state_size']:],
-                                                self.config['averaging'])
+            final_output_fw = self._agg_outputs(outputs[:, :, :self.config.state_size],
+                                                self.config.averaging)
+            final_output_bw = self._agg_outputs(outputs[:, :, self.config.state_size:],
+                                                self.config.averaging)
             final_output = (final_output_fw + final_output_bw) / 2
         else:
             # Create layers using MultiRNNCell()
-            if self.config['cell_type'] == 'LSTM':
+            if self.config.cell_type == 'LSTM':
                 multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells, state_is_tuple=True)
             else:
                 multi_cells = tf.contrib.rnn.MultiRNNCell(list_cells)
             # Shape of outputs = (batch_size, max_length, state_size)
             outputs, state = tf.nn.dynamic_rnn(multi_cells, x, dtype=tf.float32)
-            final_output = self._agg_outputs(outputs, self.config['averaging'])
+            final_output = self._agg_outputs(outputs, self.config.averaging)
         # Add droput layer
-        if self.config['dropout']:
-            final_output_dropout = tf.nn.dropout(final_output, self.config['keep_prob'])
+        if self.config.dropout:
+            final_output_dropout = tf.nn.dropout(final_output, self.config.keep_prob)
         else:
             final_output_dropout = final_output
         # Final layer
@@ -106,7 +106,7 @@ class RNNModel(Model):
             mask = tf.cast(self.mask_placeholder, tf.int32)
             n_words = tf.reduce_sum(mask, axis=1)
             idx = tf.range(tf.shape(self.input_placeholder)[0]) * tf.shape(outputs)[1] + (n_words - 1)
-            final_output = tf.gather(tf.reshape(outputs, (-1, self.config['state_size'])), idx)
+            final_output = tf.gather(tf.reshape(outputs, (-1, self.config.state_size)), idx)
         return final_output
 
     def _add_loss_op(self, pred):
@@ -115,7 +115,7 @@ class RNNModel(Model):
         return tf.reduce_mean(loss*class_weights)
 
     def _add_training_op(self, loss):
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.config['lr'])
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.config.lr)
         train_op = optimizer.minimize(loss)
         return train_op
 
@@ -135,9 +135,9 @@ class RNNModel(Model):
         return utils.sigmoid(pred_batch)
 
     def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):
-        n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
+        n_minibatches = 1 + int(len(inputs) / self.config.batch_size)
         prog = tf.keras.utils.Progbar(target=n_minibatches)
-        minibatches = utils.minibatch(self.config['batch_size'],
+        minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=labels, masks=masks, shuffle=shuffle)
         loss = 0
         for i, (inputs_batch, masks_batch, labels_batch) in enumerate(minibatches):
@@ -147,8 +147,8 @@ class RNNModel(Model):
         return loss
 
     def _run_epoch_dev(self, sess, inputs, masks, labels, shuffle):
-        n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
-        minibatches = utils.minibatch(self.config['batch_size'],
+        n_minibatches = 1 + int(len(inputs) / self.config.batch_size)
+        minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=labels, masks=masks, shuffle=shuffle)
         loss = 0
         for i, (inputs_batch, masks_batch, labels_batch) in enumerate(minibatches):
@@ -166,8 +166,8 @@ class RNNModel(Model):
         if tokens_dev is not None:
             inputs_dev = np.array(tokens_to_ids(tokens_dev, self.word2id))
             list_dev_loss = []
-        for epoch in range(self.config['n_epochs']):
-            print "Epoch = {}/{}:".format(str(epoch + 1), str(self.config['n_epochs']))
+        for epoch in range(self.config.n_epochs):
+            print "Epoch = {}/{}:".format(str(epoch + 1), str(self.config.n_epochs))
             list_train_loss.append(self._run_epoch_train(sess,
                                                          inputs_train, masks_train, labels_train,
                                                          shuffle))
@@ -182,7 +182,7 @@ class RNNModel(Model):
 
     def predict(self, sess, tokens, masks):
         inputs = np.array(tokens_to_ids(tokens, self.word2id))
-        minibatches = utils.minibatch(self.config['batch_size'],
+        minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=None, masks=masks, shuffle=False)
         list_y_score = []
         for i, (inputs_batch, masks_batch) in enumerate(minibatches):
