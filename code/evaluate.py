@@ -147,7 +147,8 @@ def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
                             legendloc=(1.04, 0))
 
 
-def plot_loss(list_loss, save_prefix=None):
+def plot_loss(list_train_loss, list_dev_loss=None,
+              save_prefix=None):
     '''
     Plot loss over epoch
 
@@ -157,7 +158,9 @@ def plot_loss(list_loss, save_prefix=None):
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.plot(list_loss, linewidth=3, color=colors[3])
+    ax.plot(list_train_loss, linewidth=3, color=colors[3])
+    if list_dev_loss is not None:
+        ax.plot(list_dev_loss, linewidth=3, color=colors[5])
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss')
 
     if save_prefix:
