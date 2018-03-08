@@ -1,0 +1,46 @@
+batch_size: 2048
+bidirectional: false
+cell_kwargs: {}
+cell_type: LSTM
+dropout: true
+dropout_kwargs: {input_keep_prob: 0.8, output_keep_prob: 0.8, state_keep_prob: 0.8}
+embed_size: 50
+exp_name: rnn_full_2
+label_names: [toxic, severe_toxic, obscene, threat, insult, identity_hate]
+lr: 0.001
+max_comment_size: 250
+n_epochs: 50
+n_features: 50
+n_labels: 6
+n_layers: 2
+state_size: 50
+
+Final loss = 0.1004
+Mean column-wise ROC AUC - train = 0.9156
+Mean column-wise ROC AUC - dev = 0.7980
+ROC AUC of toxic - train = 0.9020
+ROC AUC of toxic - dev = 0.8166
+ROC AUC of severe_toxic - train = 0.9466
+ROC AUC of severe_toxic - dev = 0.9119
+ROC AUC of obscene - train = 0.9082
+ROC AUC of obscene - dev = 0.8819
+ROC AUC of threat - train = 0.9635
+ROC AUC of threat - dev = 0.5888
+ROC AUC of insult - train = 0.8887
+ROC AUC of insult - dev = 0.8192
+ROC AUC of identity_hate - train = 0.8848
+ROC AUC of identity_hate - dev = 0.7699
+Mean column-wise average precision - train = 0.3100
+Mean column-wise average precision - dev = 0.2635
+average precision of toxic - train = 0.6181
+average precision of toxic - dev = 0.4591
+average precision of severe_toxic - train = 0.1949
+average precision of severe_toxic - dev = 0.1940
+average precision of obscene - train = 0.4457
+average precision of obscene - dev = 0.4645
+average precision of threat - train = 0.0797
+average precision of threat - dev = 0.0118
+average precision of insult - train = 0.4318
+average precision of insult - dev = 0.3906
+average precision of identity_hate - train = 0.0895
+average precision of identity_hate - dev = 0.0607
