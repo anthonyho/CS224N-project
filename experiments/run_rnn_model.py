@@ -30,8 +30,8 @@ out_dir = 'out/'
 # Define configs
 debug = False
 
-config = {'exp_name': 'rnn_full_10',
-          'n_epochs': 50,  # number of iterations
+config = {'exp_name': 'rnn_full_10-1',
+          'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
@@ -47,8 +47,8 @@ config = {'exp_name': 'rnn_full_10',
           'averaging': True
           }
 
-config2 = {'exp_name': 'rnn_full_11',
-          'n_epochs': 50,  # number of iterations
+config2 = {'exp_name': 'rnn_full_11-1',
+          'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
@@ -64,8 +64,8 @@ config2 = {'exp_name': 'rnn_full_11',
           'averaging': True
           }
 
-config3 = {'exp_name': 'rnn_full_12',
-          'n_epochs': 50,  # number of iterations
+config3 = {'exp_name': 'rnn_full_12-1',
+          'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
@@ -81,8 +81,8 @@ config3 = {'exp_name': 'rnn_full_12',
           'averaging': True
           }
 
-config4 = {'exp_name': 'rnn_full_13',
-          'n_epochs': 50,  # number of iterations
+config4 = {'exp_name': 'rnn_full_13-1',
+          'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
