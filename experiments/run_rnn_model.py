@@ -14,7 +14,7 @@ import yaml
 
 
 # Define global variables
-embed_size = 50
+embed_size = 300
 label_names = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
 max_comment_size = 250
 
@@ -28,10 +28,10 @@ out_dir = 'out/'
 
 
 # Define configs
-debug = 4000
+debug = False
 
-config = {'exp_name': 'rnn_full_1',
-          'n_epochs': 2,  # number of iterations
+config = {'exp_name': 'rnn_full_10',
+          'n_epochs': 50,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
           'max_comment_size'  : max_comment_size,
@@ -41,17 +41,64 @@ config = {'exp_name': 'rnn_full_1',
           'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
-          'dropout_rate': 0.5,
+          'keep_prob': 0.5,
+          'n_layers': 1,
+          'bidirectional': False,
+          'averaging': True
+          }
+
+config2 = {'exp_name': 'rnn_full_11',
+          'n_epochs': 50,  # number of iterations
+          'embed_size': embed_size,  # dimension of the inputs
+          'n_labels': 6,  # number of labels to predict
+          'max_comment_size'  : max_comment_size,
+          'state_size': 50,  # size of hidden layers; int
+          'lr': .001,  # learning rate
+          'batch_size': 1024,  # number of training examples in each minibatch
+          'cell_type': 'LSTM',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
+          'n_layers': 2,
+          'bidirectional': False,
+          'averaging': True
+          }
+
+config3 = {'exp_name': 'rnn_full_12',
+          'n_epochs': 50,  # number of iterations
+          'embed_size': embed_size,  # dimension of the inputs
+          'n_labels': 6,  # number of labels to predict
+          'max_comment_size'  : max_comment_size,
+          'state_size': 50,  # size of hidden layers; int
+          'lr': .001,  # learning rate
+          'batch_size': 1024,  # number of training examples in each minibatch
+          'cell_type': 'LSTM',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
           'n_layers': 1,
           'bidirectional': True,
           'averaging': True
           }
 
-config2 = {
+config4 = {'exp_name': 'rnn_full_13',
+          'n_epochs': 50,  # number of iterations
+          'embed_size': embed_size,  # dimension of the inputs
+          'n_labels': 6,  # number of labels to predict
+          'max_comment_size'  : max_comment_size,
+          'state_size': 50,  # size of hidden layers; int
+          'lr': .001,  # learning rate
+          'batch_size': 1024,  # number of training examples in each minibatch
+          'cell_type': 'LSTM',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
+          'n_layers': 2,
+          'bidirectional': True,
+          'averaging': True
+          }
 
-}
-
-list_configs = [config]
+list_configs = [config4, config2, config3, config]
 
 
 def load_and_process(train_data_file, test_data_file=None,
