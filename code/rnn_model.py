@@ -122,12 +122,17 @@ class RNNModel(Model):
         _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
         return loss
 
+    def _evaluate_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
+        feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch)
+        loss = sess.run(self.loss, feed_dict=feed)
+        return loss
+
     def _predict_on_batch(self, sess, inputs_batch, masks_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch)
         pred_batch = sess.run(self.pred, feed_dict=feed)
         return utils.sigmoid(pred_batch)
 
-    def _run_epoch(self, sess, inputs, masks, labels, shuffle):
+    def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):
         n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
         prog = tf.keras.utils.Progbar(target=n_minibatches)
         minibatches = utils.minibatch(self.config['batch_size'],
@@ -139,13 +144,39 @@ class RNNModel(Model):
         loss /= (i + 1)
         return loss
 
-    def train(self, sess, tokens, masks, labels, shuffle=True):
-        inputs = np.array(tokens_to_ids(tokens, self.word2id))
-        list_loss = []
+    def _run_epoch_dev(self, sess, inputs, masks, labels, shuffle):
+        n_minibatches = 1 + int(len(inputs) / self.config['batch_size'])
+        minibatches = utils.minibatch(self.config['batch_size'],
+                                      inputs, labels=labels, masks=masks, shuffle=shuffle)
+        loss = 0
+        for i, (inputs_batch, masks_batch, labels_batch) in enumerate(minibatches):
+            loss += self._evaluate_on_batch(sess, inputs_batch, masks_batch, labels_batch)
+        loss /= (i + 1)
+        print 'dev loss = {:.4f}'.format(loss)
+        return loss
+
+    def train(self, sess,
+              tokens_train, masks_train, labels_train,
+              tokens_dev=None, masks_dev=None, labels_dev=None,
+              shuffle=True):
+        inputs_train = np.array(tokens_to_ids(tokens_train, self.word2id))
+        list_train_loss = []
+        if tokens_dev is not None:
+            inputs_dev = np.array(tokens_to_ids(tokens_dev, self.word2id))
+            list_dev_loss = []
         for epoch in range(self.config['n_epochs']):
             print "Epoch = {}/{}:".format(str(epoch + 1), str(self.config['n_epochs']))
-            list_loss.append(self._run_epoch(sess, inputs, masks, labels, shuffle))
-        return list_loss
+            list_train_loss.append(self._run_epoch_train(sess,
+                                                         inputs_train, masks_train, labels_train,
+                                                         shuffle))
+            if tokens_dev is not None:
+                list_dev_loss.append(self._run_epoch_dev(sess,
+                                                         inputs_dev, masks_dev, labels_dev,
+                                                         shuffle))
+        if tokens_dev is not None:
+            return list_train_loss
+        else:
+            return list_train_loss, list_dev_loss
 
     def predict(self, sess, tokens, masks):
         inputs = np.array(tokens_to_ids(tokens, self.word2id))
