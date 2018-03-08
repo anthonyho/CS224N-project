@@ -98,7 +98,7 @@ class RNNModel(Model):
     def _agg_outputs(self, outputs, averaging=True):
         if averaging:
             mask = tf.cast(self.mask_placeholder, tf.float32)
-            n_words = tf.reduce_sum(mask, axis=1, keepdims=True)
+            n_words = tf.reduce_sum(mask, axis=1, keep_dims=True)
             mask_stack = tf.stack([mask] * outputs.shape[-1], axis=-1)
             sum_outputs = tf.reduce_sum(outputs * mask_stack, axis=1)
             final_output = sum_outputs / n_words

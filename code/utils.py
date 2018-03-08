@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 def softmax(x):
     if len(x.shape) > 1:
-        x = np.exp(x - np.max(x, axis=1, keepdims=True))
-        x = x / np.sum(x, axis=1, keepdims=True)
+        x = np.exp(x - np.max(x, axis=1, keep_dims=True))
+        x = x / np.sum(x, axis=1, keep_dims=True)
     else:
         x = np.exp(x - np.max(x))
         x = x / np.sum(x)
