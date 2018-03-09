@@ -159,7 +159,7 @@ def plot_loss(list_loss_train, list_loss_dev=None,
     ax = fig.add_subplot(111)
 
     ax.plot(list_loss_train, linewidth=3, color=colors[3], label='train')
-    if list_dev_loss is not None:
+    if list_loss_dev is not None:
         ax.plot(list_loss_dev, linewidth=3, color=colors[5], label='dev')
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss',
                             legend=True, legendloc=1)
@@ -181,7 +181,7 @@ def plot_score(list_score_train, list_score_dev=None, metric='roc',
     ax = fig.add_subplot(111)
 
     ax.plot(list_score_train, linewidth=3, color=colors[7], label='train')
-    if list_dev_score is not None:
+    if list_score_dev is not None:
         ax.plot(list_score_dev, linewidth=3, color=colors[9], label='dev')
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel=metric_long[metric],
                             legend=True, legendloc=4)
