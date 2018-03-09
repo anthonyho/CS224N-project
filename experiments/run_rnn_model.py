@@ -100,21 +100,12 @@ def load_and_process(train_data_file, test_data_file=None,
 
 def run(config, data, emb_data, debug=False):
 
-    # Unpack data
-    print "Unpacking data..."
+    # Initialize
+    print "Initializing..."
     (inputs_train, labels_train, masks_train,
      inputs_dev, labels_dev, masks_dev,
      id_test, inputs_test, masks_test) = data
 
-    # Initialize graph
-    print "Building model..."
-    tf.reset_default_graph()
-    with tf.Graph().as_default() as graph:
-        obj = rnn_model.RNNModel(config, emb_data=emb_data)
-        init_op = tf.global_variables_initializer()
-        saver = tf.train.Saver()
-
-    print "Initializing model..."
     save_dir = os.path.join(out_dir, config['exp_name'])
     if debug:
         save_dir += '_debug'
@@ -123,22 +114,42 @@ def run(config, data, emb_data, debug=False):
     save_prefix = os.path.join(save_dir, config['exp_name'])
 
     # Fit
-    with tf.Session(graph=graph) as sess:
-        sess.run(init_op)
+    tf.reset_default_graph()
+    with tf.Graph().as_default() as graph:
+        print "Building model..."
+        obj = rnn_model.RNNModel(config, emb_data=emb_data)
+        init_op = tf.global_variables_initializer()
+        saver = tf.train.Saver()
+
         print "Training model..."
-        (list_train_loss, list_dev_loss,
-         list_train_score, list_dev_score) = obj.train(sess,
-                                                       inputs_train, masks_train, labels_train,
-                                                       inputs_dev, masks_dev, labels_dev)
-        print "\nPredicting train data..."
-        y_prob_train = obj.predict(sess, inputs_train, masks_train)
-        print "Predicting dev data..."
-        y_prob_dev = obj.predict(sess, inputs_dev, masks_dev)
-        print "Predicting test data..."
-        if inputs_test:
-            y_prob_test = obj.predict(sess, inputs_test, masks_test)
-        print "Saving model..."
-        saver.save(sess,save_prefix)
+        with tf.Session(graph=graph) as sess:
+            sess.run(init_op)
+            (list_loss_train, list_loss_dev,
+             list_score_train, list_score_dev,
+             y_prob_train, y_prob_dev) = obj.train(sess,
+                                                   inputs_train, masks_train, labels_train,
+                                                   inputs_dev, masks_dev, labels_dev,
+                                                   saver=saver, save_prefix=save_prefix)
+
+    # Predict
+    if inputs_test:
+        tf.reset_default_graph()
+        with tf.Graph().as_default() as graph:
+            print "Rebuilding model..."
+            obj = rnn_model.RNNModel(config, emb_data=emb_data)
+            init_op = tf.global_variables_initializer()
+            saver = tf.train.Saver()
+
+            print "Restoring model..."
+            with tf.Session(graph=graph) as sess:
+                sess.run(init_op)
+                saver.restore(sess, save_prefix+'.weights')
+                print "Predicting labels for test set..."
+                y_prob_test = obj.predict(sess, inputs_test, masks_test)
+        # Save y_prob_test to csv
+        print "Saving test prediction..."
+        y_prob_test_df = utils.y_prob_to_df(y_prob_test, id_test, label_names)
+        y_prob_test_df.to_csv(save_prefix+'_test.csv', index=False)
 
     # Pack y_dict
     print "Evaluating..."
@@ -146,15 +157,15 @@ def run(config, data, emb_data, debug=False):
               'dev': (labels_dev, y_prob_dev)}
 
     # Evaluate, plot and save
-    print "Final train loss = {:.4f}".format(list_train_loss[-1])
-    print "Final dev loss = {:.4f}".format(list_dev_loss[-1])
+    print "Final train loss = {:.4f}".format(list_loss_train[-1])
+    print "Final dev loss = {:.4f}".format(list_loss_dev[-1])
     with open(save_prefix+'.txt', 'w') as f:
         yaml.dump(config, f)
         f.write('\n')
-        f.write("Final train loss = {:.4f}\n".format(list_train_loss[-1]))
-        f.write("Final dev loss = {:.4f}\n".format(list_dev_loss[-1]))
-    evaluate.plot_loss(list_train_loss, list_dev_loss, save_prefix=save_prefix)
-    evaluate.plot_score(list_train_score, list_dev_score, save_prefix=save_prefix)
+        f.write("Final train loss = {:.4f}\n".format(list_loss_train[-1]))
+        f.write("Final dev loss = {:.4f}\n".format(list_loss_dev[-1]))
+    evaluate.plot_loss(list_loss_train, list_loss_dev, save_prefix=save_prefix)
+    evaluate.plot_score(list_score_train, list_score_dev, save_prefix=save_prefix)
     results_roc = evaluate.evaluate_full(y_dict, metric='roc', names=label_names,
                                          print_msg=True, save_msg=True, plot=True,
                                          save_prefix=save_prefix)
@@ -162,26 +173,6 @@ def run(config, data, emb_data, debug=False):
                                          print_msg=True, save_msg=True, plot=True,
                                          save_prefix=save_prefix)
 
-    # Save y_prob_test to csv
-    print "Saving test prediction..."
-    if inputs_test:
-        y_prob_test_df = utils.y_prob_to_df(y_prob_test, id_test, label_names)
-        y_prob_test_df.to_csv(save_prefix+'_test.csv', index=False)
-
-def predict_from_params(inputs, config, emb_data, path_to_noext_file):
-    tf.reset_default_graph()
-    with tf.Graph().as_default() as graph:
-        obj = nn_model.FeedForwardNeuralNetwork(config=config, emb_data=emb_data)
-        init_op = tf.global_variables_initializer()
-        saver = tf.train.Saver()
-
-        with tf.Session() as sess:
-            sess.run(init_op)
-            saver.restore(sess,path_to_noext_file)
-            print 'restored'
-            y_prob = obj.predict(sess,
-                        inputs)
-    return y_prob
 
 if __name__ == '__main__':
     data, emb_data = load_and_process(train_data_file, test_data_file, debug=debug)

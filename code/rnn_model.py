@@ -36,13 +36,17 @@ class RNNModel(Model):
         input_shape = (None, self.config.max_comment_size)
         labels_shape = (None, self.config.n_labels)
         mask_shape = (None, self.config.max_comment_size)
+        dropout_shape = ()
         self.input_placeholder = tf.placeholder(tf.int32, input_shape)
         self.labels_placeholder = tf.placeholder(tf.float32, labels_shape)
         self.mask_placeholder = tf.placeholder(tf.bool, mask_shape)
+        self.dropout_placeholder = tf.placeholder(tf.float32, dropout_shape)
 
-    def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None):
+    def _create_feed_dict(self, inputs_batch, masks_batch, labels_batch=None,
+                          dropout=1):
         feed_dict = {self.input_placeholder: inputs_batch,
-                     self.mask_placeholder: masks_batch}
+                     self.mask_placeholder: masks_batch,
+                     self.dropout_placeholder: dropout}
         if labels_batch is not None:
             feed_dict[self.labels_placeholder] = labels_batch
         return feed_dict
@@ -94,7 +98,7 @@ class RNNModel(Model):
             h = self._agg_outputs(outputs, self.config.averaging)
         # Add droput layer
         if self.config.dropout:
-            h_dropout = tf.nn.dropout(h, self.config.keep_prob)
+            h_dropout = tf.nn.dropout(h, self.dropout_placeholder)
         else:
             h_dropout = h
         # Final layer
@@ -140,7 +144,8 @@ class RNNModel(Model):
         return train_op
 
     def _train_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
-        feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch)
+        feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch,
+                                      dropout=self.config.keep_prob)
         _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
         return loss
 
@@ -191,8 +196,7 @@ class RNNModel(Model):
         y_prob = np.vstack(list_y_prob)
         return y_prob
 
-    def _run_epoch_eval(self, sess, inputs, masks, labels, metric):
-        y_prob = self._run_epoch_pred(sess, inputs, masks)
+    def _run_epoch_eval(self, sess, y_prob, labels, metric):
         return evaluate.evaluate(labels, y_prob, metric=metric, average=True)
 
     def _transform_inputs(self, tokens):
@@ -202,41 +206,54 @@ class RNNModel(Model):
     def train(self, sess,
               tokens_train, masks_train, labels_train,
               tokens_dev, masks_dev, labels_dev,
-              metric='roc', shuffle=True):
+              metric='roc', saver=None, save_prefix=None, shuffle=True):
         inputs_train = self._transform_inputs(tokens_train)
         inputs_dev = self._transform_inputs(tokens_dev)
-        list_train_loss = []
-        list_dev_loss = []
-        list_train_score = []
-        list_dev_score = []
-        best_score = 0
+        list_loss_train = []
+        list_loss_dev = []
+        list_score_train = []
+        list_score_dev = []
+        best_score_dev = 0
+        best_y_prob_train = None
+        best_y_prob_dev = None
         for epoch in range(self.config.n_epochs):
             print "\nEpoch = {}/{}:".format(epoch + 1, self.config.n_epochs)
-            train_loss = self._run_epoch_train(sess,
+            loss_train = self._run_epoch_train(sess,
                                                inputs_train, masks_train,
                                                labels_train, shuffle=shuffle)
-            dev_loss = self._run_epoch_dev(sess,
+            loss_dev = self._run_epoch_dev(sess,
                                            inputs_dev, masks_dev,
                                            labels_dev, shuffle=False)
-            train_score = self._run_epoch_eval(sess,
-                                               inputs_train, masks_train,
-                                               labels_train, metric=metric)
-            dev_score = self._run_epoch_eval(sess,
-                                             inputs_dev, masks_dev,
-                                             labels_dev, metric=metric)
+            y_prob_train = self._run_epoch_pred(sess,
+                                                inputs_train, masks_train)
+            y_prob_dev = self._run_epoch_pred(sess,
+                                              inputs_dev, masks_dev)
+            score_train = self._run_epoch_eval(sess,
+                                               y_prob_train, labels_train,
+                                               metric=metric)
+            score_dev = self._run_epoch_eval(sess,
+                                             y_prob_dev, labels_dev,
+                                             metric=metric)
             metric_name = evaluate.metric_long[metric]
-            print "train loss = {:.4f}".format(train_loss)
-            print "dev loss = {:.4f}".format(dev_loss)
-            print "train {} = {:.4f}".format(metric_name, train_score)
-            print "dev {} = {:.4f}".format(metric_name, dev_score)
-            list_train_loss.append(train_loss)
-            list_dev_loss.append(dev_loss)
-            list_train_score.append(train_score)
-            list_dev_score.append(dev_score)
-            if dev_score > best_score:
-                best_score = dev_score
-                print "New best dev {} = {:.4f}".format(metric_name, dev_score)
-        return list_train_loss, list_dev_loss, list_train_score, list_dev_score
+            print "train loss = {:.4f}".format(loss_train)
+            print "dev loss = {:.4f}".format(loss_dev)
+            print "train {} = {:.4f}".format(metric_name, score_train)
+            print "dev {} = {:.4f}".format(metric_name, score_dev)
+            list_loss_train.append(loss_train)
+            list_loss_dev.append(loss_dev)
+            list_score_train.append(score_train)
+            list_score_dev.append(score_dev)
+            if score_dev > best_score_dev:
+                best_score_dev = score_dev
+                best_y_prob_train = y_prob_train
+                best_y_prob_dev = y_prob_dev
+                print "New best dev {} = {:.4f}".format(metric_name, score_dev)
+                if saver:
+                    print "Saving new best model..."
+                    saver.save(sess, save_prefix+'.weights')
+        return (list_loss_train, list_loss_dev,
+                list_score_train, list_score_dev,
+                best_y_prob_train, best_y_prob_dev)
 
     def predict(self, sess, tokens, masks):
         inputs = self._transform_inputs(tokens)
