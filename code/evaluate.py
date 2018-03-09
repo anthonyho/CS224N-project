@@ -147,7 +147,7 @@ def plot_metric_curve(y_true, y_prob, metric='roc', ax=None, **kwargs):
                             legendloc=(1.04, 0))
 
 
-def plot_loss(list_train_loss, list_dev_loss=None,
+def plot_loss(list_loss_train, list_loss_dev=None,
               save_prefix=None):
     '''
     Plot loss over epoch
@@ -158,9 +158,9 @@ def plot_loss(list_train_loss, list_dev_loss=None,
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.plot(list_train_loss, linewidth=3, color=colors[3], label='train')
+    ax.plot(list_loss_train, linewidth=3, color=colors[3], label='train')
     if list_dev_loss is not None:
-        ax.plot(list_dev_loss, linewidth=3, color=colors[5], label='dev')
+        ax.plot(list_loss_dev, linewidth=3, color=colors[5], label='dev')
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss',
                             legend=True, legendloc=1)
 
@@ -169,7 +169,7 @@ def plot_loss(list_train_loss, list_dev_loss=None,
         plt.savefig(save_prefix+'_loss'+'.eps', bbox_inches='tight')
 
 
-def plot_score(list_train_score, list_dev_score=None, metric='roc',
+def plot_score(list_score_train, list_score_dev=None, metric='roc',
                save_prefix=None):
     '''
     Plot performance score over epoch
@@ -180,9 +180,9 @@ def plot_score(list_train_score, list_dev_score=None, metric='roc',
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.plot(list_train_score, linewidth=3, color=colors[7], label='train')
+    ax.plot(list_score_train, linewidth=3, color=colors[7], label='train')
     if list_dev_score is not None:
-        ax.plot(list_dev_score, linewidth=3, color=colors[9], label='dev')
+        ax.plot(list_score_dev, linewidth=3, color=colors[9], label='dev')
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel=metric_long[metric],
                             legend=True, legendloc=4)
 
