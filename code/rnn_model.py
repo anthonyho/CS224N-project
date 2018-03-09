@@ -337,6 +337,7 @@ def run(config, emb_data, train_dev_set, test_set=None,
     save_prefix = os.path.join(save_dir, config['exp_name'])
 
     # Fit
+    print "Training..."
     tf.reset_default_graph()
     with tf.Graph().as_default() as graph:
         print "Building model..."
@@ -355,6 +356,7 @@ def run(config, emb_data, train_dev_set, test_set=None,
              y_prob_train, y_prob_dev) = results
 
     # Predict test set
+    print "Testing..."
     if test_set:
         tf.reset_default_graph()
         with tf.Graph().as_default() as graph:
