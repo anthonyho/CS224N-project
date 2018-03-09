@@ -181,7 +181,7 @@ def plot_score(list_train_score, list_dev_score=None, metric='roc',
     ax = fig.add_subplot(111)
 
     ax.plot(list_train_score, linewidth=3, color=colors[7], label='train')
-    if list_dev_loss is not None:
+    if list_dev_score is not None:
         ax.plot(list_dev_score, linewidth=3, color=colors[9], label='dev')
     utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel=metric_long[metric],
                             legend=True, legendloc=4)
