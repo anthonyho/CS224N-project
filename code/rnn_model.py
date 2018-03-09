@@ -6,6 +6,7 @@ from tensorflow.contrib.rnn import (BasicRNNCell, GRUCell, LSTMCell,
 from preprocess import get_glove, tokens_to_ids
 from model import Model
 import utils
+import evaluate
 
 
 example_config = {'exp_name': 'rnn_full_1',
@@ -143,78 +144,101 @@ class RNNModel(Model):
         _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
         return loss
 
-    def _eval_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
+    def _loss_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch)
-        loss = sess.run(self.loss, feed_dict=feed)  #
+        loss = sess.run(self.loss, feed_dict=feed)
         return loss
 
     def _predict_on_batch(self, sess, inputs_batch, masks_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch)
-        pred_batch = sess.run(tf.sigmoid(self.pred), feed_dict=feed)  #
+        pred_batch = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
         return pred_batch
 
     def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):
         n_minibatches = len(np.arange(0, len(inputs), self.config.batch_size))
         prog = tf.keras.utils.Progbar(target=n_minibatches)
         minibatches = utils.minibatch(self.config.batch_size,
-                                      inputs, labels=labels, masks=masks,
+                                      inputs, masks=masks, labels=labels,
                                       shuffle=shuffle)
-        loss = 0
-        for i, batch in enumerate(minibatches):
-            loss += self._train_on_batch(sess, *batch)
+        mean_loss = 0
+        for i, curr_batch in enumerate(minibatches):
+            loss = self._train_on_batch(sess, *curr_batch)
+            mean_loss += loss
             force = (i + 1) == n_minibatches
             prog.update(i + 1, [('train_loss', loss)], force=force)
-        loss /= (i + 1)
-        return loss
+        mean_loss /= (i + 1)
+        return mean_loss
 
     def _run_epoch_dev(self, sess, inputs, masks, labels, shuffle):
         minibatches = utils.minibatch(self.config.batch_size,
-                                      inputs, labels=labels, masks=masks,
+                                      inputs, masks=masks, labels=labels,
                                       shuffle=shuffle)
-        loss = 0
-        for i, batch in enumerate(minibatches):
-            loss += self._eval_on_batch(sess, *batch)
-        loss /= (i + 1)
-        print 'dev loss = {:.4f}'.format(loss)
-        return loss
+        mean_loss = 0
+        for i, curr_batch in enumerate(minibatches):
+            loss = self._loss_on_batch(sess, *curr_batch)
+            mean_loss += loss
+        mean_loss /= (i + 1)
+        return mean_loss
+
+    def _run_epoch_pred(self, sess, inputs, masks):
+        minibatches = utils.minibatch(self.config.batch_size,
+                                      inputs, masks=masks, labels=None,
+                                      shuffle=False)
+        list_y_prob = []
+        for i, curr_batch in enumerate(minibatches):
+            prob = self._predict_on_batch(sess, *curr_batch)
+            list_y_prob.append(prob)
+        y_prob = np.vstack(list_y_prob)
+        return y_prob
+
+    def _run_epoch_eval(self, sess, inputs, masks, labels, metric):
+        y_prob = self._run_epoch_pred(sess, inputs, masks)
+        return evaluate.evaluate(labels, y_prob, metric=metric, average=True)
 
     def _transform_inputs(self, tokens):
-        return np.array(tokens_to_ids(tokens, self.word2id))
+        inputs = np.array(tokens_to_ids(tokens, self.word2id))
+        return inputs
 
     def train(self, sess,
               tokens_train, masks_train, labels_train,
-              tokens_dev=None, masks_dev=None, labels_dev=None,
-              shuffle=True):
+              tokens_dev, masks_dev, labels_dev,
+              metric='roc', shuffle=True):
         inputs_train = self._transform_inputs(tokens_train)
+        inputs_dev = self._transform_inputs(tokens_dev)
         list_train_loss = []
-        if tokens_dev is not None:
-            inputs_dev = self._transform_inputs(tokens_dev)
-            list_dev_loss = []
+        list_dev_loss = []
+        list_train_score = []
+        list_dev_score = []
+        best_score = 0
         for epoch in range(self.config.n_epochs):
-            print "Epoch = {}/{}:".format(epoch + 1, self.config.n_epochs)
+            print "\nEpoch = {}/{}:".format(epoch + 1, self.config.n_epochs)
             train_loss = self._run_epoch_train(sess,
                                                inputs_train, masks_train,
                                                labels_train, shuffle=shuffle)
+            dev_loss = self._run_epoch_dev(sess,
+                                           inputs_dev, masks_dev,
+                                           labels_dev, shuffle=False)
+            train_score = self._run_epoch_eval(sess,
+                                               inputs_train, masks_train,
+                                               labels_train, metric=metric)
+            dev_score = self._run_epoch_eval(sess,
+                                             inputs_dev, masks_dev,
+                                             labels_dev, metric=metric)
+            metric_name = evaluate.metric_long[metric]
+            print "train loss = {:.4f}".format(train_loss)
+            print "dev loss = {:.4f}".format(dev_loss)
+            print "train {} = {:.4f}".format(metric_name, train_score)
+            print "dev {} = {:.4f}".format(metric_name, dev_score)
             list_train_loss.append(train_loss)
-            if tokens_dev is not None:
-                dev_loss = self._run_epoch_dev(sess,
-                                               inputs_dev, masks_dev,
-                                               labels_dev, shuffle=False)
-                list_dev_loss.append(dev_loss)
-        if tokens_dev is not None:
-            return list_train_loss, list_dev_loss
-        else:
-            return list_train_loss
+            list_dev_loss.append(dev_loss)
+            list_train_score.append(train_score)
+            list_dev_score.append(dev_score)
+            if dev_score > best_score:
+                best_score = dev_score
+                print "New best dev {} = {:.4f}".format(metric_name, dev_score)
+        return list_train_loss, list_dev_loss, list_train_score, list_dev_score
 
     def predict(self, sess, tokens, masks):
         inputs = self._transform_inputs(tokens)
-        minibatches = utils.minibatch(self.config.batch_size,
-                                      inputs, labels=None, masks=masks,
-                                      shuffle=False)
-        list_y_score = []
-        for i, batch in enumerate(minibatches):
-            inputs_batch, masks_batch = batch
-            score = self._predict_on_batch(sess, inputs_batch, masks_batch)
-            list_y_score.append(score)
-        y_score = np.vstack(list_y_score)
-        return y_score
+        y_prob = self._run_epoch_pred(sess, inputs, masks)
+        return y_prob
