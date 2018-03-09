@@ -10,7 +10,7 @@ class Config(object):
             setattr(self, key, value)
         if hasattr(self, 'class_weights'):
             self.class_weights = np.array(self.class_weights)
-            self.class_weights_sum = np.sum(self.class_weights)
+            self.mean_class_weights = np.mean(self.class_weights)
 
 
 class Model(object):

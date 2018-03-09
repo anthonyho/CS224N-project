@@ -130,7 +130,7 @@ class RNNModel(Model):
                                                        logits=pred)
         if hasattr(self.config, 'class_weights'):
             weighted_mean = tf.reduce_mean(loss * self.config.class_weights)
-            return weighted_mean / self.config.class_weights_sum
+            return weighted_mean / self.config.mean_class_weights
         else:
             return tf.reduce_mean(loss)
 
