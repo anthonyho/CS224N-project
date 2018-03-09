@@ -1,3 +1,4 @@
+import os
 import pickle
 import numpy as np
 import pandas as pd
@@ -11,8 +12,13 @@ pad_token = u'<pad>'
 glove_dir = '../data/glove'
 
 
-def load_data(file_name):
-    data = pd.read_csv(file_name, encoding='utf-8')
+def load_data(file_name, debug=False):
+    if debug and isinstance(debug, bool):
+        data = pd.read_csv(file_name, encoding='utf-8', nrows=6000)
+    elif debug and isinstance(debug, int):
+        data = pd.read_csv(file_name, encoding='utf-8', nrows=debug)
+    else:
+        data = pd.read_csv(file_name, encoding='utf-8')
     return data
 
 
