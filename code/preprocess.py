@@ -52,7 +52,7 @@ def _uniformize_comment_length(list_tokens, length,
     return padded_list_tokens, mask
 
 
-def pad_tokenized_comments(list_list_tokens, length=None, **kwargs):
+def pad_comments(list_list_tokens, length=None, **kwargs):
     padded_list_list_tokens = []
     masks = []
     for list_tokens in list_list_tokens:

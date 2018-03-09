@@ -1,14 +1,17 @@
+import os
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.rnn import (BasicRNNCell, GRUCell, LSTMCell,
                                     MultiRNNCell,
                                     stack_bidirectional_dynamic_rnn)
-from preprocess import get_glove, tokens_to_ids
+import yaml
 from model import Model
+import preprocess
 import utils
 import evaluate
 
 
+# Example config for reference
 example_config = {'exp_name': 'rnn_full_1',
                   'n_epochs': 50,
                   'embed_size': 300,
@@ -200,7 +203,7 @@ class RNNModel(Model):
         return evaluate.evaluate(labels, y_prob, metric=metric, average=True)
 
     def _transform_inputs(self, tokens):
-        inputs = np.array(tokens_to_ids(tokens, self.word2id))
+        inputs = np.array(preprocess.tokens_to_ids(tokens, self.word2id))
         return inputs
 
     def train(self, sess,
@@ -259,3 +262,137 @@ class RNNModel(Model):
         inputs = self._transform_inputs(tokens)
         y_prob = self._run_epoch_pred(sess, inputs, masks)
         return y_prob
+
+
+# Module method
+def load_and_process(train_data_file, test_data_file=None,
+                     train_tokens_file=None, test_tokens_file=None,
+                     embed_size=300, max_comment_size=250, label_names=None,
+                     fraction_dev=0.3, debug=False):
+    # Get glove/w2v data
+    emb_data = preprocess.get_glove(embed_size)
+
+    # Load and (optionally) subset train data
+    train_data = preprocess.load_data(train_data_file, debug=debug)
+
+    # Load test data
+    if test_data_file:
+        test_data = preprocess.load_data(test_data_file, debug=debug)
+        id_test = test_data['id']
+
+    # Tokenize train comments or load pre-tokenized train comments
+    if debug or (train_tokens_file is None):
+        inputs = preprocess.tokenize_df(train_data)
+    else:
+        inputs = preprocess.load_tokenized_comments(train_tokens_file)
+    # Pad and create masks for train comments
+    inputs, masks = preprocess.pad_comments(inputs, max_comment_size)
+
+    # Tokenize test comments or load pre-tokenized test comments
+    if test_data_file:
+        if test_tokens_file is None:
+            inputs_test = preprocess.tokenize_df(test_data)
+        else:
+            inputs_test = preprocess.load_tokenized_comments(test_tokens_file)
+        # Pad and create masks for train comments
+        inputs_test, masks_test = preprocess.pad_comments(inputs_test,
+                                                          max_comment_size)
+
+    # Load train labels
+    if label_names is None:
+        label_names = ['toxic', 'severe_toxic', 'obscene',
+                       'threat', 'insult', 'identity_hate']
+    labels = preprocess.filter_labels(train_data, label_names)
+
+    # Split to train and dev sets
+    train_dev_set = preprocess.split_train_dev(inputs, labels, masks,
+                                               fraction_dev=fraction_dev)
+    if test_data_file:
+        test_set = (id_test, inputs_test, masks_test)
+    else:
+        test_set = None
+
+    return emb_data, train_dev_set, test_set
+
+
+# Module method
+def run(config, emb_data, train_dev_set, test_set=None,
+        label_names=None, out_dir='./', debug=False):
+    # Initialize
+    print "Initializing..."
+    (inputs_train, labels_train, masks_train,
+     inputs_dev, labels_dev, masks_dev) = train_dev_set
+    if test_set:
+        (id_test, inputs_test, masks_test) = test_set
+    if label_names is None:
+        label_names = ['toxic', 'severe_toxic', 'obscene',
+                       'threat', 'insult', 'identity_hate']
+
+    # Create save directory
+    save_dir = os.path.join(out_dir, config['exp_name'])
+    if debug:
+        save_dir += '_debug'
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+    save_prefix = os.path.join(save_dir, config['exp_name'])
+
+    # Fit
+    tf.reset_default_graph()
+    with tf.Graph().as_default() as graph:
+        print "Building model..."
+        obj = RNNModel(config, emb_data=emb_data)
+        init_op = tf.global_variables_initializer()
+        saver = tf.train.Saver()
+        print "Training model..."
+        with tf.Session(graph=graph) as sess:
+            sess.run(init_op)
+            results = obj.train(sess,
+                                inputs_train, masks_train, labels_train,
+                                inputs_dev, masks_dev, labels_dev,
+                                saver=saver, save_prefix=save_prefix)
+            (list_loss_train, list_loss_dev,
+             list_score_train, list_score_dev,
+             y_prob_train, y_prob_dev) = results
+
+    # Predict test set
+    if test_set:
+        tf.reset_default_graph()
+        with tf.Graph().as_default() as graph:
+            print "Rebuilding model..."
+            obj = RNNModel(config, emb_data=emb_data)
+            init_op = tf.global_variables_initializer()
+            saver = tf.train.Saver()
+            print "Restoring model..."
+            with tf.Session(graph=graph) as sess:
+                sess.run(init_op)
+                saver.restore(sess, save_prefix+'.weights')
+                print "Predicting labels for test set..."
+                y_prob_test = obj.predict(sess, inputs_test, masks_test)
+        # Save y_prob_test to csv
+        print "Saving test prediction..."
+        y_prob_test_df = utils.y_prob_to_df(y_prob_test, id_test, label_names)
+        y_prob_test_df.to_csv(save_prefix+'_test.csv', index=False)
+
+    # Evaluate and plot
+    print "Evaluating..."
+    best_auc_train = evaluate.evaluate(labels_train, y_prob_train)
+    best_auc_dev = evaluate.evaluate(labels_dev, y_prob_dev)
+    print "Final best train ROC AUC = {:.4f}".format(best_auc_train)
+    print "Final best dev ROC AUC = {:.4f}".format(best_auc_dev)
+    with open(save_prefix+'.txt', 'w') as f:
+        yaml.dump(config, f)
+        f.write('\n')
+        f.write("Final best train ROC AUC = {:.4f}".format(best_auc_train))
+        f.write("Final best dev ROC AUC = {:.4f}".format(best_auc_dev))
+    evaluate.plot_loss(list_loss_train, list_loss_dev,
+                       save_prefix=save_prefix)
+    evaluate.plot_score(list_score_train, list_score_dev,
+                        save_prefix=save_prefix)
+    y_dict = {'train': (labels_train, y_prob_train),
+              'dev': (labels_dev, y_prob_dev)}
+    evaluate.evaluate_full(y_dict, metric='roc', names=label_names,
+                           print_msg=True, save_msg=True, plot=True,
+                           save_prefix=save_prefix)
+    evaluate.evaluate_full(y_dict, metric='prc', names=label_names,
+                           print_msg=True, save_msg=True, plot=True,
+                           save_prefix=save_prefix)
