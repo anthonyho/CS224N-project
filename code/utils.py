@@ -17,44 +17,46 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def minibatch(batch_size, inputs, labels=None, masks=None, shuffle=True):
+def minibatch(batch_size, inputs, masks=None, labels=None, shuffle=True):
     '''
     Return generator for minibatching
 
     Inputs:
     - batch_size: int
     - inputs: list or numpy array (to be batched across rows)
+    - masks: list or numpy array (to be batched across rows)
     - labels: list or numpy array (to be batched across rows)
     - shuffle: bool to randomly shuffle data before minibatching
 
     Return:
     - generator of inputs_batch if labels=None
+    - generator of (inputs_batch, masks_batch) if masks but no labels
     - generator of (inputs_batch, labels_batch) if labels but no mask
     - generator of (inputs_batch, mask_batch, labels_batch) if all 3.
     '''
-    if labels is not None:
-        assert len(inputs) == len(labels), \
-            'Inputs and labels must have equal dimensions!'
     if masks is not None:
         assert len(inputs) == len(masks), \
             'Inputs and masks must have equal dimensions!'
+    if labels is not None:
+        assert len(inputs) == len(labels), \
+            'Inputs and labels must have equal dimensions!'
     n_data = len(inputs)
     ind = np.arange(n_data)
     if shuffle:
         np.random.shuffle(ind)
     for i in np.arange(0, n_data, batch_size):
         inputs_batch = _get_items(inputs, ind[i:i+batch_size])
-        if labels is None and masks is None:
+        if masks is None and labels is None:
             yield inputs_batch
-        elif labels is not None and masks is None:
+        elif masks is None and labels is not None:
             labels_batch = _get_items(labels, ind[i:i+batch_size])
             yield (inputs_batch, labels_batch)
-        elif labels is None and masks is not None:
+        elif masks is not None and labels is None:
             masks_batch = _get_items(masks, ind[i:i+batch_size])
             yield (inputs_batch, masks_batch)
         else:
-            labels_batch = _get_items(labels, ind[i:i+batch_size])
             masks_batch = _get_items(masks, ind[i:i+batch_size])
+            labels_batch = _get_items(labels, ind[i:i+batch_size])
             yield (inputs_batch, masks_batch, labels_batch)
 
 
