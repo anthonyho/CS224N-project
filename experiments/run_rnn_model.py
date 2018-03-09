@@ -16,6 +16,7 @@ import yaml
 # Define global variables
 embed_size = 300
 label_names = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
+class_weights = [1.0, 9.58871448, 1.810155, 31.99581504, 1.94160208, 10.88540896]
 max_comment_size = 250
 
 train_data_file = '../data/train.csv'
@@ -34,6 +35,7 @@ config = {'exp_name': 'rnn_full_10-1',
           'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
+          'class_weights': class_weights,
           'max_comment_size'  : max_comment_size,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
@@ -51,6 +53,7 @@ config2 = {'exp_name': 'rnn_full_11-1',
           'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
+          'class_weights': class_weights,
           'max_comment_size'  : max_comment_size,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
@@ -68,6 +71,7 @@ config3 = {'exp_name': 'rnn_full_12-1',
           'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
+          'class_weights': class_weights,
           'max_comment_size'  : max_comment_size,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
@@ -85,6 +89,7 @@ config4 = {'exp_name': 'rnn_full_13-1',
           'n_epochs': 8,  # number of iterations
           'embed_size': embed_size,  # dimension of the inputs
           'n_labels': 6,  # number of labels to predict
+          'class_weights': class_weights,
           'max_comment_size'  : max_comment_size,
           'state_size': 50,  # size of hidden layers; int
           'lr': .001,  # learning rate
@@ -161,7 +166,6 @@ def run(config, data, emb_data, debug=False):
         obj = rnn_model.RNNModel(config, emb_data=emb_data)
         init_op = tf.global_variables_initializer()
         saver = tf.train.Saver()
-    graph.finalize()
 
     save_dir = os.path.join(out_dir, config['exp_name'])
     if debug:
@@ -176,11 +180,11 @@ def run(config, data, emb_data, debug=False):
         list_train_loss, list_dev_loss  = obj.train(sess,
                                                     inputs_train, masks_train, labels_train,
                                                     inputs_dev, masks_dev, labels_dev)
-        saver.save(sess,save_prefix)
         y_score_train = obj.predict(sess, inputs_train, masks_train)
         y_score_dev = obj.predict(sess, inputs_dev, masks_dev)
         if inputs_test:
             y_score_test = obj.predict(sess, inputs_test, masks_test)
+        saver.save(sess,save_prefix)
 
     # Pack y_dict
     y_dict = {'train': (labels_train, y_score_train),

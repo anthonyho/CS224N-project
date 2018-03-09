@@ -12,6 +12,9 @@ example_config = {'exp_name': 'rnn_full_1',
                   'n_epochs': 50,
                   'embed_size': 300,
                   'n_labels': 6,
+                  'class_weights': np.array([1.0, 9.58871448, 1.810155,
+                                             31.99581504, 1.94160208,
+                                             10.88540896]),
                   'max_comment_size': 250,
                   'state_size': 50,
                   'lr': .001,
@@ -125,7 +128,8 @@ class RNNModel(Model):
         loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
                                                        logits=pred)
         if hasattr(self.config, 'class_weights'):
-            return tf.reduce_mean(loss * self.config.class_weights)
+            weighted_mean = tf.reduce_mean(loss * self.config.class_weights)
+            return weighted_mean / self.config.class_weights_sum
         else:
             return tf.reduce_mean(loss)
 

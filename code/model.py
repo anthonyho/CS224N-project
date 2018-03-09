@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from preprocess import get_glove
 
@@ -7,6 +8,9 @@ class Config(object):
     def __init__(self, config):
         for key, value in config.items():
             setattr(self, key, value)
+        if hasattr(self, 'class_weights'):
+            self.class_weights = np.array(self.class_weights)
+            self.class_weights_sum = np.sum(self.class_weights)
 
 
 class Model(object):
