@@ -25,7 +25,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
 
     Inputs:
     - y_dict: dict with keys in {'train', 'dev', 'test'} and
-              values = (y_true, y_score) where y_true and y_score
+              values = (y_true, y_prob) where y_true and y_prob
               are np.array of shape (n_samples, n_labels)
     - metric: 'roc' or 'prc'
     - names: list of names for each label (e.g. ['toxic', 'obscene', 'insult'])
@@ -50,11 +50,11 @@ def evaluate_full(y_dict, metric='roc', names=None,
     # Evaluate mean column-wise result
     for dataset in curr_datasets:
         y_true = y_dict[dataset][0]
-        y_score = y_dict[dataset][1]
-        perf_score = evaluate(y_true, y_score, metric=metric, average=True)
-        results['average'][dataset] = perf_score
+        y_prob = y_dict[dataset][1]
+        score = evaluate(y_true, y_prob, metric=metric, average=True)
+        results['average'][dataset] = score
         message = "Mean column-wise {} - {} = {:.4f}"
-        message = message.format(metric_long[metric], dataset, perf_score)
+        message = message.format(metric_long[metric], dataset, score)
         if print_msg:
             print message
         if save_msg:
@@ -69,12 +69,12 @@ def evaluate_full(y_dict, metric='roc', names=None,
         results[name] = {}
         for dataset in curr_datasets:
             y_true = y_dict[dataset][0][:, i]
-            y_score = y_dict[dataset][1][:, i]
-            perf_score = evaluate(y_true, y_score, metric=metric)
-            results[name][dataset] = perf_score
+            y_prob = y_dict[dataset][1][:, i]
+            score = evaluate(y_true, y_prob, metric=metric)
+            results[name][dataset] = score
             message = "{} of {} - {} = {:.4f}"
             message = message.format(metric_long[metric],
-                                     name, dataset, perf_score)
+                                     name, dataset, score)
             if print_msg:
                 print message
             if save_msg:
@@ -83,7 +83,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
             if plot:
                 label = name + ' - ' + dataset
                 color = colors[2 * i + 1]
-                plot_metric_curve(y_true, y_score, metric=metric, ax=ax,
+                plot_metric_curve(y_true, y_prob, metric=metric, ax=ax,
                                   label=label, color=color,
                                   linestyle=dataset_linestyles[dataset])
     # Save fig
@@ -94,34 +94,34 @@ def evaluate_full(y_dict, metric='roc', names=None,
     return results
 
 
-def evaluate(y_true, y_score, metric='roc', average=True):
+def evaluate(y_true, y_prob, metric='roc', average=True):
     '''Evaluate performance of multilabel classification
 
     Inputs:
     - y_true: np.array of shape (n_samples, n_labels)
-    - y_score: np.array of shape (n_samples, n_labels)
+    - y_prob: np.array of shape (n_samples, n_labels)
     - metric: 'roc' or 'prc'
     - average: return mean column-wise metric if true,
                return np.array of shape (n_labels) otherwise
     '''
     if average:
         if metric == 'roc':
-            return roc_auc_score(y_true, y_score, average='macro')
+            return roc_auc_score(y_true, y_prob, average='macro')
         elif metric == 'prc':
-            return average_precision_score(y_true, y_score, average='macro')
+            return average_precision_score(y_true, y_prob, average='macro')
     else:
         if metric == 'roc':
-            return roc_auc_score(y_true, y_score, average=None)
+            return roc_auc_score(y_true, y_prob, average=None)
         elif metric == 'prc':
-            return average_precision_score(y_true, y_score, average=None)
+            return average_precision_score(y_true, y_prob, average=None)
 
 
-def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
+def plot_metric_curve(y_true, y_prob, metric='roc', ax=None, **kwargs):
     '''Plot metric curve for a single label
 
     Inputs:
     - y_true: np.array of shape (n_samples, 1)
-    - y_score: np.array of shape (n_samples, 1)
+    - y_prob: np.array of shape (n_samples, 1)
     - metric: 'roc' or 'prc'
     - ax: axes to plot in
     - kwargs: additional keyword arguments to pass to plt.plot / plt.step
@@ -130,13 +130,13 @@ def plot_metric_curve(y_true, y_score, metric='roc', ax=None, **kwargs):
         ax = plt.gca()
 
     if metric == 'roc':
-        fpr, tpr, _ = roc_curve(y_true, y_score)
+        fpr, tpr, _ = roc_curve(y_true, y_prob)
         ax.plot(fpr, tpr, linewidth=3, **kwargs)
         xlabel = 'False positive rate'
         ylabel = 'True positive rate'
 
     elif metric == 'prc':
-        precision, recall, _ = precision_recall_curve(y_true, y_score)
+        precision, recall, _ = precision_recall_curve(y_true, y_prob)
         ax.step(recall, precision, linewidth=3, **kwargs)
         xlabel = 'Recall'
         ylabel = 'Precision'
@@ -167,3 +167,25 @@ def plot_loss(list_train_loss, list_dev_loss=None,
     if save_prefix:
         plt.savefig(save_prefix+'_loss'+'.png', bbox_inches='tight')
         plt.savefig(save_prefix+'_loss'+'.eps', bbox_inches='tight')
+
+
+def plot_score(list_train_score, list_dev_score=None, metric='roc',
+               save_prefix=None):
+    '''
+    Plot performance score over epoch
+
+    Inputs:
+    - save_prefix: file path to save the figure (no extension)
+    '''
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.plot(list_train_score, linewidth=3, color=colors[7], label='train')
+    if list_dev_loss is not None:
+        ax.plot(list_dev_score, linewidth=3, color=colors[9], label='dev')
+    utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel=metric_long[metric],
+                            legend=True, legendloc=4)
+
+    if save_prefix:
+        plt.savefig(save_prefix+'_score'+'.png', bbox_inches='tight')
+        plt.savefig(save_prefix+'_score'+'.eps', bbox_inches='tight')
