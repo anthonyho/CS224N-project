@@ -34,34 +34,33 @@ def _tokenize_single_string(string):
     return tokens
 
 
-def _uniformize_comment_length(list_tokens, target_length,
+def tokenize_df(df, column='comment_text'):
+    list_list_tokens = []
+    for index, item in df[column].iteritems():
+        list_tokens = _tokenize_single_string(item)
+        list_list_tokens.append(list_tokens)
+    return list_list_tokens
+
+
+def _uniformize_comment_length(list_tokens, length,
                                pad_token=pad_token):
-    padded_list_tokens = list_tokens[:target_length]  # clip if too long
+    padded_list_tokens = list_tokens[:length]  # clip if too long
     mask = len(padded_list_tokens) * [True]
-    while len(padded_list_tokens) < target_length:
+    while len(padded_list_tokens) < length:
         padded_list_tokens.append(pad_token)
         mask.append(False)
     return padded_list_tokens, mask
 
 
-def tokenize_df(df, column='comment_text', target_length=None, **kwargs):
-    list_list_tokens = []
-    if target_length is not None:
-        masks = []
-    for index, item in df[column].iteritems():
-        list_tokens = _tokenize_single_string(item)
-        if target_length is not None:
-            list_tokens, mask = _uniformize_comment_length(list_tokens,
-                                                           target_length,
-                                                           **kwargs)
-            list_list_tokens.append(list_tokens)
-            masks.append(mask)
-        else:
-            list_list_tokens.append(list_tokens)
-    if target_length is not None:
-        return list_list_tokens, masks
-    else:
-        return list_list_tokens
+def pad_tokenized_comments(list_list_tokens, length=None, **kwargs):
+    padded_list_list_tokens = []
+    masks = []
+    for list_tokens in list_list_tokens:
+        padded_list_tokens, mask = _uniformize_comment_length(list_tokens,
+                                                              length, **kwargs)
+        padded_list_list_tokens.append(padded_list_tokens)
+        masks.append(mask)
+    return padded_list_list_tokens, masks
 
 
 def tokens_to_ids(list_list_tokens, word2id, id_unknown=id_unknown):
