@@ -69,19 +69,19 @@ def _get_items(data, ind):
         return data[ind]
 
 
-def y_score_to_df(y_score, comment_id, label_names):
+def y_prob_to_df(y_prob, comment_id, label_names):
     '''
-    Return a Pandas dataframe of y_score with id and column labels
+    Return a Pandas dataframe of y_prob with id and column labels
 
     Inputs:
-    - y_score: np.array of shape (n_samples, n_labels)
+    - y_prob: np.array of shape (n_samples, n_labels)
     - comment_id: pandas series or list of length n_samples
     - label_names: list of label names of length n_labels
     '''
     comment_id = pd.Series(comment_id, name='id')
-    y_score_df = pd.DataFrame(y_score, columns=label_names)
-    y_score_df = pd.concat([comment_id, y_score_df], axis=1)
-    return y_score_df.fillna(0.5)  # <- quick hack, to be fixed
+    y_prob_df = pd.DataFrame(y_prob, columns=label_names)
+    y_prob_df = pd.concat([comment_id, y_prob_df], axis=1)
+    return y_prob_df.fillna(0.5)  # <- quick hack, to be fixed
 
 
 def setplotproperties(fig=None, ax=None, figsize=None,
