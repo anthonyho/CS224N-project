@@ -43,12 +43,15 @@ class RNNModel(Model):
             feed_dict[self.labels_placeholder] = labels_batch
         return feed_dict
 
+    def _add_embeddings(self):
+        embed_matrix = tf.Variable(self.emb_matrix)
+        emb = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
+        emb_shape = (-1, self.config.max_comment_size, self.config.embed_size)
+        return tf.reshape(emb, emb_shape)
+
     def _add_prediction_op(self):
         # Add embedding layer
-        embed_matrix = tf.Variable(self.emb_matrix)
-        x = tf.nn.embedding_lookup(embed_matrix, self.input_placeholder)
-        x_shape = (-1, self.config.max_comment_size, self.config.embed_size)
-        x = tf.reshape(x, x_shape)
+        x = self._add_embeddings()
         # Create cells for each layer
         list_cells = []
         for i in range(self.config.n_layers):
@@ -143,8 +146,8 @@ class RNNModel(Model):
 
     def _predict_on_batch(self, sess, inputs_batch, masks_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch)
-        pred_batch = sess.run(self.pred, feed_dict=feed)  #
-        return utils.sigmoid(pred_batch)
+        pred_batch = sess.run(tf.sigmoid(self.pred), feed_dict=feed)  #
+        return pred_batch
 
     def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):
         n_minibatches = len(np.arange(0, len(inputs), self.config.batch_size))
@@ -171,14 +174,17 @@ class RNNModel(Model):
         print 'dev loss = {:.4f}'.format(loss)
         return loss
 
+    def _transform_inputs(self, tokens):
+        return np.array(tokens_to_ids(tokens, self.word2id))
+
     def train(self, sess,
               tokens_train, masks_train, labels_train,
               tokens_dev=None, masks_dev=None, labels_dev=None,
               shuffle=True):
-        inputs_train = np.array(tokens_to_ids(tokens_train, self.word2id))
+        inputs_train = self._transform_inputs(tokens_train)
         list_train_loss = []
         if tokens_dev is not None:
-            inputs_dev = np.array(tokens_to_ids(tokens_dev, self.word2id))
+            inputs_dev = self._transform_inputs(tokens_dev)
             list_dev_loss = []
         for epoch in range(self.config.n_epochs):
             print "Epoch = {}/{}:".format(epoch + 1, self.config.n_epochs)
@@ -197,7 +203,7 @@ class RNNModel(Model):
             return list_train_loss
 
     def predict(self, sess, tokens, masks):
-        inputs = np.array(tokens_to_ids(tokens, self.word2id))
+        inputs = self._transform_inputs(tokens)
         minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=None, masks=masks,
                                       shuffle=False)

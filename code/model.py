@@ -43,6 +43,9 @@ class Model(object):
     def _train_on_batch(self, sess, inputs_batch, labels_batch):
         raise NotImplementedError()
 
+    def _predict_on_batch(self, sess, inputs_batch):
+        raise NotImplementedError()
+
     def _run_epoch(self, sess, inputs, labels):
         raise NotImplementedError()
 
@@ -53,7 +56,6 @@ class Model(object):
         raise NotImplementedError()
 
     def predict(self, tokens):
-        # saving self.predicted_labels
         raise NotImplementedError()
 
     def save_weights(self, file_path):
