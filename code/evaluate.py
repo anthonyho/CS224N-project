@@ -1,5 +1,5 @@
-from sklearn.metrics import roc_curve, roc_auc_score, \
-    precision_recall_curve, average_precision_score
+from sklearn.metrics import (roc_curve, precision_recall_curve,
+                             roc_auc_score, average_precision_score)
 import matplotlib.pyplot as plt
 import seaborn as sns
 import utils
@@ -158,10 +158,11 @@ def plot_loss(list_train_loss, list_dev_loss=None,
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.plot(list_train_loss, linewidth=3, color=colors[3])
+    ax.plot(list_train_loss, linewidth=3, color=colors[3], label='train')
     if list_dev_loss is not None:
-        ax.plot(list_dev_loss, linewidth=3, color=colors[5])
-    utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss')
+        ax.plot(list_dev_loss, linewidth=3, color=colors[5], label='dev')
+    utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Loss',
+                            legend=True, legendloc=1)
 
     if save_prefix:
         plt.savefig(save_prefix+'_loss'+'.png', bbox_inches='tight')
