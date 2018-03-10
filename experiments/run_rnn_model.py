@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath('../code'))
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import tensorflow as tf
 import rnn_model
 
 
