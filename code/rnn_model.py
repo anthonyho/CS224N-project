@@ -399,10 +399,6 @@ def run(config, emb_data, train_dev_set, test_set=None,
     # Evaluate and plot
     logger.info("")
     logger.info("Evaluating...")
-    best_auc_train = evaluate.evaluate(labels_train, y_prob_train)
-    best_auc_dev = evaluate.evaluate(labels_dev, y_prob_dev)
-    logger.info("Final best train ROC AUC = {:.4f}".format(best_auc_train))
-    logger.info("Final best dev ROC AUC = {:.4f}".format(best_auc_dev))
     evaluate.plot_loss(list_loss_train, list_loss_dev,
                        save_prefix=save_prefix)
     evaluate.plot_score(list_score_train, list_score_dev,
