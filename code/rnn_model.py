@@ -28,12 +28,12 @@ example_config = {'exp_name': 'rnn_full_1',
                                              10.88540896]),
                   'max_comment_size': 250,
                   'state_size': 50,
-                  'lr': .001,
+                  'lr': .0005,
                   'batch_size': 1024,
                   'cell_type': 'LSTM',
                   'cell_kwargs': {},
                   'dropout': True,
-                  'keep_prob': 0.5,
+                  'keep_prob': 0.6,
                   'n_layers': 2,
                   'bidirectional': True,
                   'averaging': True
@@ -142,14 +142,12 @@ class RNNModel(Model):
         labels = self.labels_placeholder
         loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
                                                        logits=pred)
-        if hasattr(self.config, 'class_weights'):
-            weighted_mean = tf.reduce_mean(loss * self.config.class_weights)
-            return weighted_mean / self.config.mean_class_weights
-        else:
-            return tf.reduce_mean(loss)
+        loss = (tf.reduce_mean(loss * self.config.class_weights) /
+                self.config.mean_class_weights)
+        return loss
 
     def _add_training_op(self, loss):
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.config.lr)
+        optimizer = self.config.optimizer(learning_rate=self.config.lr)
         train_op = optimizer.minimize(loss)
         return train_op
 
@@ -166,8 +164,8 @@ class RNNModel(Model):
 
     def _predict_on_batch(self, sess, inputs_batch, masks_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch)
-        pred_batch = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
-        return pred_batch
+        prob = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
+        return prob
 
     def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):
         n_minibatches = len(np.arange(0, len(inputs), self.config.batch_size))
@@ -207,7 +205,8 @@ class RNNModel(Model):
         return y_prob
 
     def _run_epoch_eval(self, sess, y_prob, labels, metric):
-        return evaluate.evaluate(labels, y_prob, metric=metric, average=True)
+        score = evaluate.evaluate(labels, y_prob, metric=metric, average=True)
+        return score
 
     def _transform_inputs(self, tokens):
         inputs = np.array(preprocess.tokens_to_ids(tokens, self.word2id))
@@ -291,20 +290,20 @@ def load_and_process(train_data_file, test_data_file=None,
 
     # Tokenize train comments or load pre-tokenized train comments
     if debug or (train_tokens_file is None):
-        inputs = preprocess.tokenize_df(train_data)
+        tokens = preprocess.tokenize_df(train_data)
     else:
-        inputs = preprocess.load_tokenized_comments(train_tokens_file)
+        tokens = preprocess.load_tokenized_comments(train_tokens_file)
     # Pad and create masks for train comments
-    inputs, masks = preprocess.pad_comments(inputs, max_comment_size)
+    tokens, masks = preprocess.pad_comments(tokens, max_comment_size)
 
     # Tokenize test comments or load pre-tokenized test comments
     if test_data_file:
         if test_tokens_file is None:
-            inputs_test = preprocess.tokenize_df(test_data)
+            tokens_test = preprocess.tokenize_df(test_data)
         else:
-            inputs_test = preprocess.load_tokenized_comments(test_tokens_file)
+            tokens_test = preprocess.load_tokenized_comments(test_tokens_file)
         # Pad and create masks for train comments
-        inputs_test, masks_test = preprocess.pad_comments(inputs_test,
+        tokens_test, masks_test = preprocess.pad_comments(tokens_test,
                                                           max_comment_size)
 
     # Load train labels
@@ -314,10 +313,10 @@ def load_and_process(train_data_file, test_data_file=None,
     labels = preprocess.filter_labels(train_data, label_names)
 
     # Split to train and dev sets
-    train_dev_set = preprocess.split_train_dev(inputs, labels, masks,
+    train_dev_set = preprocess.split_train_dev(tokens, labels, masks,
                                                fraction_dev=fraction_dev)
     if test_data_file:
-        test_set = (id_test, inputs_test, masks_test)
+        test_set = (id_test, tokens_test, masks_test)
     else:
         test_set = None
 
@@ -349,10 +348,10 @@ def run(config, emb_data, train_dev_set, test_set=None,
     # Initializing
     logger.info("")
     logger.info("Initializing...")
-    (inputs_train, labels_train, masks_train,
-     inputs_dev, labels_dev, masks_dev) = train_dev_set
+    (tokens_train, labels_train, masks_train,
+     tokens_dev, labels_dev, masks_dev) = train_dev_set
     if test_set:
-        (id_test, inputs_test, masks_test) = test_set
+        (id_test, tokens_test, masks_test) = test_set
     if label_names is None:
         label_names = ['toxic', 'severe_toxic', 'obscene',
                        'threat', 'insult', 'identity_hate']
@@ -369,8 +368,8 @@ def run(config, emb_data, train_dev_set, test_set=None,
         with tf.Session(graph=graph) as sess:
             sess.run(init_op)
             results = obj.train(sess,
-                                inputs_train, masks_train, labels_train,
-                                inputs_dev, masks_dev, labels_dev,
+                                tokens_train, masks_train, labels_train,
+                                tokens_dev, masks_dev, labels_dev,
                                 saver=saver, save_prefix=save_prefix)
             (list_loss_train, list_loss_dev,
              list_score_train, list_score_dev,
@@ -391,7 +390,7 @@ def run(config, emb_data, train_dev_set, test_set=None,
                 sess.run(init_op)
                 saver.restore(sess, save_prefix+'.weights')
                 logger.info("Predicting labels for test set...")
-                y_prob_test = obj.predict(sess, inputs_test, masks_test)
+                y_prob_test = obj.predict(sess, tokens_test, masks_test)
         # Save y_prob_test to csv
         logger.info("Saving test prediction...")
         y_prob_test_df = utils.y_prob_to_df(y_prob_test, id_test, label_names)

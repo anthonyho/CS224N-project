@@ -6,11 +6,17 @@ from preprocess import get_glove
 class Config(object):
 
     def __init__(self, config):
+        # Unpack config dictionary into instance attributes
         for key, value in config.items():
             setattr(self, key, value)
-        if hasattr(self, 'class_weights'):
+        # Define default parameters if not provided in config
+        try:
             self.class_weights = np.array(self.class_weights)
-            self.mean_class_weights = np.mean(self.class_weights)
+        except AttributeError:
+            self.class_weights = np.ones(self.n_labels)
+        self.mean_class_weights = np.mean(self.class_weights)
+        if not hasattr(self, 'optimizer'):
+            self.optimizer = tf.train.AdamOptimizer
 
 
 class Model(object):
