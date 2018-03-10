@@ -12,12 +12,6 @@ import utils
 import evaluate
 
 
-logger = logging.getLogger()
-logging.basicConfig(format='%(asctime)s -- %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.INFO)
-
-
 # Example config for reference
 example_config = {'exp_name': 'rnn_full_1',
                   'n_epochs': 50,
@@ -216,6 +210,9 @@ class RNNModel(Model):
               tokens_train, masks_train, labels_train,
               tokens_dev, masks_dev, labels_dev,
               metric='roc', saver=None, save_prefix=None, shuffle=True):
+        logger = logging.getLogger()
+        logging.basicConfig(format='%(asctime)s -- %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
         inputs_train = self._transform_inputs(tokens_train)
         inputs_dev = self._transform_inputs(tokens_dev)
         list_loss_train = []
@@ -339,11 +336,19 @@ def run(config, emb_data, train_dev_set, test_set=None,
         yaml.dump(config, f)
 
     # Create file handler for logger
-    handler = logging.FileHandler(save_prefix+'.log')
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(logging.Formatter(fmt='%(asctime)s -- %(message)s',
-                                           datefmt='%Y-%m-%d %H:%M:%S'))
-    logging.getLogger().addHandler(handler)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    logger.handlers = []
+    fh = logging.FileHandler(save_prefix+'.log')
+    ch = logging.StreamHandler()
+    fh.setLevel(logging.INFO)
+    ch.setLevel(logging.INFO)
+    formatter = logging.Formatter(fmt='%(asctime)s -- %(message)s',
+                                  datefmt='%Y-%m-%d %H:%M:%S')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    logger.addHandler(fh)
+    logger.addHandler(ch)
 
     # Initializing
     logger.info("")

@@ -39,6 +39,8 @@ def evaluate_full(y_dict, metric='roc', names=None,
     '''
     # Get current root logger
     logger = logging.getLogger()
+    logging.basicConfig(format='%(asctime)s -- %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
 
     # Get datasets in y_dict
     curr_datasets = [dataset for dataset in datasets if dataset in y_dict]
