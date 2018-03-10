@@ -4,11 +4,18 @@ import tensorflow as tf
 from tensorflow.contrib.rnn import (BasicRNNCell, GRUCell, LSTMCell,
                                     MultiRNNCell,
                                     stack_bidirectional_dynamic_rnn)
+import logging
 import yaml
 from model import Model
 import preprocess
 import utils
 import evaluate
+
+
+logger = logging.getLogger()
+logging.basicConfig(format='%(asctime)s -- %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.INFO)
 
 
 # Example config for reference
@@ -220,7 +227,8 @@ class RNNModel(Model):
         best_y_prob_train = None
         best_y_prob_dev = None
         for epoch in range(self.config.n_epochs):
-            print "\nEpoch = {}/{}:".format(epoch + 1, self.config.n_epochs)
+            logger.info("")
+            logger.info("Epoch = {}/{}:".format(epoch+1, self.config.n_epochs))
             loss_train = self._run_epoch_train(sess,
                                                inputs_train, masks_train,
                                                labels_train, shuffle=shuffle)
@@ -238,10 +246,10 @@ class RNNModel(Model):
                                              y_prob_dev, labels_dev,
                                              metric=metric)
             metric_name = evaluate.metric_long[metric]
-            print "train loss = {:.4f}".format(loss_train)
-            print "dev loss = {:.4f}".format(loss_dev)
-            print "train {} = {:.4f}".format(metric_name, score_train)
-            print "dev {} = {:.4f}".format(metric_name, score_dev)
+            logger.info("train loss = {:.4f}".format(loss_train))
+            logger.info("dev loss = {:.4f}".format(loss_dev))
+            logger.info("train {} = {:.4f}".format(metric_name, score_train))
+            logger.info("dev {} = {:.4f}".format(metric_name, score_dev))
             list_loss_train.append(loss_train)
             list_loss_dev.append(loss_dev)
             list_score_train.append(score_train)
@@ -250,9 +258,10 @@ class RNNModel(Model):
                 best_score_dev = score_dev
                 best_y_prob_train = y_prob_train
                 best_y_prob_dev = y_prob_dev
-                print "New best dev {} = {:.4f}".format(metric_name, score_dev)
+                logger.info("New best dev {} = {:.4f}".format(metric_name,
+                                                              score_dev))
                 if saver:
-                    print "Saving new best model..."
+                    logger.info("Saving new best model...")
                     saver.save(sess, save_prefix+'.weights')
         return (list_loss_train, list_loss_dev,
                 list_score_train, list_score_dev,
@@ -318,16 +327,6 @@ def load_and_process(train_data_file, test_data_file=None,
 # Module method
 def run(config, emb_data, train_dev_set, test_set=None,
         label_names=None, out_dir='./', debug=False):
-    # Initialize
-    print "Initializing..."
-    (inputs_train, labels_train, masks_train,
-     inputs_dev, labels_dev, masks_dev) = train_dev_set
-    if test_set:
-        (id_test, inputs_test, masks_test) = test_set
-    if label_names is None:
-        label_names = ['toxic', 'severe_toxic', 'obscene',
-                       'threat', 'insult', 'identity_hate']
-
     # Create save directory
     save_dir = os.path.join(out_dir, config['exp_name'])
     if debug:
@@ -336,15 +335,37 @@ def run(config, emb_data, train_dev_set, test_set=None,
         os.mkdir(save_dir)
     save_prefix = os.path.join(save_dir, config['exp_name'])
 
+    # Write config to log file
+    with open(save_prefix+'.log', 'w') as f:
+        yaml.dump(config, f)
+
+    # Create file handler for logger
+    handler = logging.FileHandler(save_prefix+'.log')
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(logging.Formatter(fmt='%(asctime)s -- %(message)s',
+                                           datefmt='%Y-%m-%d %H:%M:%S'))
+    logging.getLogger().addHandler(handler)
+
+    # Initializing
+    logger.info("")
+    logger.info("Initializing...")
+    (inputs_train, labels_train, masks_train,
+     inputs_dev, labels_dev, masks_dev) = train_dev_set
+    if test_set:
+        (id_test, inputs_test, masks_test) = test_set
+    if label_names is None:
+        label_names = ['toxic', 'severe_toxic', 'obscene',
+                       'threat', 'insult', 'identity_hate']
+
     # Fit
-    print "Training..."
+    logger.info("Training...")
     tf.reset_default_graph()
     with tf.Graph().as_default() as graph:
-        print "Building model..."
+        logger.info("Building model...")
         obj = RNNModel(config, emb_data=emb_data)
         init_op = tf.global_variables_initializer()
         saver = tf.train.Saver()
-        print "Training model..."
+        logger.info("Training model...")
         with tf.Session(graph=graph) as sess:
             sess.run(init_op)
             results = obj.train(sess,
@@ -356,36 +377,33 @@ def run(config, emb_data, train_dev_set, test_set=None,
              y_prob_train, y_prob_dev) = results
 
     # Predict test set
-    print "Testing..."
+    logger.info("")
+    logger.info("Testing...")
     if test_set:
         tf.reset_default_graph()
         with tf.Graph().as_default() as graph:
-            print "Rebuilding model..."
+            logger.info("Rebuilding model...")
             obj = RNNModel(config, emb_data=emb_data)
             init_op = tf.global_variables_initializer()
             saver = tf.train.Saver()
-            print "Restoring model..."
+            logger.info("Restoring best model...")
             with tf.Session(graph=graph) as sess:
                 sess.run(init_op)
                 saver.restore(sess, save_prefix+'.weights')
-                print "Predicting labels for test set..."
+                logger.info("Predicting labels for test set...")
                 y_prob_test = obj.predict(sess, inputs_test, masks_test)
         # Save y_prob_test to csv
-        print "Saving test prediction..."
+        logger.info("Saving test prediction...")
         y_prob_test_df = utils.y_prob_to_df(y_prob_test, id_test, label_names)
         y_prob_test_df.to_csv(save_prefix+'_test.csv', index=False)
 
     # Evaluate and plot
-    print "Evaluating..."
+    logger.info("")
+    logger.info("Evaluating...")
     best_auc_train = evaluate.evaluate(labels_train, y_prob_train)
     best_auc_dev = evaluate.evaluate(labels_dev, y_prob_dev)
-    print "Final best train ROC AUC = {:.4f}".format(best_auc_train)
-    print "Final best dev ROC AUC = {:.4f}".format(best_auc_dev)
-    with open(save_prefix+'.txt', 'w') as f:
-        yaml.dump(config, f)
-        f.write('\n')
-        f.write("Final best train ROC AUC = {:.4f}".format(best_auc_train))
-        f.write("Final best dev ROC AUC = {:.4f}".format(best_auc_dev))
+    logger.info("Final best train ROC AUC = {:.4f}".format(best_auc_train))
+    logger.info("Final best dev ROC AUC = {:.4f}".format(best_auc_dev))
     evaluate.plot_loss(list_loss_train, list_loss_dev,
                        save_prefix=save_prefix)
     evaluate.plot_score(list_score_train, list_score_dev,
@@ -393,8 +411,6 @@ def run(config, emb_data, train_dev_set, test_set=None,
     y_dict = {'train': (labels_train, y_prob_train),
               'dev': (labels_dev, y_prob_dev)}
     evaluate.evaluate_full(y_dict, metric='roc', names=label_names,
-                           print_msg=True, save_msg=True, plot=True,
-                           save_prefix=save_prefix)
+                           plot=True, save_prefix=save_prefix)
     evaluate.evaluate_full(y_dict, metric='prc', names=label_names,
-                           print_msg=True, save_msg=True, plot=True,
-                           save_prefix=save_prefix)
+                           plot=True, save_prefix=save_prefix)

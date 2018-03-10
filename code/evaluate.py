@@ -2,7 +2,9 @@ from sklearn.metrics import (roc_curve, precision_recall_curve,
                              roc_auc_score, average_precision_score)
 import matplotlib.pyplot as plt
 import seaborn as sns
+import logging
 import utils
+
 
 sns.set(style="white")
 sns.set_palette("Paired", 12)
@@ -19,7 +21,7 @@ dataset_linestyles = {'train': '-',
 
 
 def evaluate_full(y_dict, metric='roc', names=None,
-                  print_msg=True, save_msg=False, plot=True, save_prefix=None):
+                  plot=True, save_prefix=None):
     '''
     Detailed evaluation of multilabel classification
 
@@ -29,13 +31,15 @@ def evaluate_full(y_dict, metric='roc', names=None,
               are np.array of shape (n_samples, n_labels)
     - metric: 'roc' or 'prc'
     - names: list of names for each label (e.g. ['toxic', 'obscene', 'insult'])
-    - print_msg: bool to print message
     - plot: bool to plot ROC/PRC
     - save_prefix: file path to save the figure (no extension)
 
     Return:
     dict['average'|label]['train'|'dev'|'test']
     '''
+    # Get current root logger
+    logger = logging.getLogger()
+
     # Get datasets in y_dict
     curr_datasets = [dataset for dataset in datasets if dataset in y_dict]
 
@@ -54,12 +58,7 @@ def evaluate_full(y_dict, metric='roc', names=None,
         score = evaluate(y_true, y_prob, metric=metric, average=True)
         results['average'][dataset] = score
         message = "Mean column-wise {} - {} = {:.4f}"
-        message = message.format(metric_long[metric], dataset, score)
-        if print_msg:
-            print message
-        if save_msg:
-            with open(save_prefix+'.txt', 'a') as f:
-                f.write(message+'\n')
+        logger.info(message.format(metric_long[metric], dataset, score))
     # Initialize plot if requested
     if plot:
         fig = plt.figure(figsize=(7, 6))
@@ -73,13 +72,8 @@ def evaluate_full(y_dict, metric='roc', names=None,
             score = evaluate(y_true, y_prob, metric=metric)
             results[name][dataset] = score
             message = "{} of {} - {} = {:.4f}"
-            message = message.format(metric_long[metric],
-                                     name, dataset, score)
-            if print_msg:
-                print message
-            if save_msg:
-                with open(save_prefix+'.txt', 'a') as f:
-                    f.write(message+'\n')
+            logger.info(message.format(metric_long[metric], name,
+                                       dataset, score))
             if plot:
                 label = name + ' - ' + dataset
                 color = colors[2 * i + 1]
