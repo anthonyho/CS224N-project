@@ -117,8 +117,8 @@ class FeedForwardNeuralNetwork(Model):
         minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=labels, shuffle=shuffle)
         mean_loss = 0
-        for i, curr_batch in enumerate(minibatches):
-            loss = self._train_on_batch(sess, *curr_batch)
+        for i, (inputs_batch, labels_batch) in enumerate(minibatches):
+            loss = self._train_on_batch(sess, inputs_batch, labels_batch)
             mean_loss += loss
             force = (i + 1) == n_minibatches
             prog.update(i + 1, [('train_loss', loss)], force=force)
@@ -129,8 +129,8 @@ class FeedForwardNeuralNetwork(Model):
         minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=labels, shuffle=shuffle)
         mean_loss = 0
-        for i, curr_batch in enumerate(minibatches):
-            loss = self._loss_on_batch(sess, *curr_batch)
+        for i, (inputs_batch, labels_batch) in enumerate(minibatches):
+            loss = self._loss_on_batch(sess, inputs_batch, labels_batch)
             mean_loss += loss
         mean_loss /= (i + 1)
         return mean_loss
@@ -139,8 +139,8 @@ class FeedForwardNeuralNetwork(Model):
         minibatches = utils.minibatch(self.config.batch_size,
                                       inputs, labels=None, shuffle=False)
         list_y_prob = []
-        for i, curr_batch in enumerate(minibatches):
-            prob = self._predict_on_batch(sess, *curr_batch)
+        for i, inputs_batch in enumerate(minibatches):
+            prob = self._predict_on_batch(sess, inputs_batch)
             list_y_prob.append(prob)
         y_prob = np.vstack(list_y_prob)
         return y_prob
