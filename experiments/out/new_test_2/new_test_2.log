@@ -289,3 +289,92 @@ state_size: 100
 2018-03-12 20:30:36 -- dev ROC AUC = 0.9550
 2018-03-12 20:30:36 -- 
 2018-03-12 20:30:36 -- Epoch = 42/50:
+2018-03-12 20:31:53 -- train loss = 0.0070
+2018-03-12 20:31:53 -- dev loss = 0.0363
+2018-03-12 20:31:53 -- train ROC AUC = 0.9970
+2018-03-12 20:31:53 -- dev ROC AUC = 0.9549
+2018-03-12 20:31:53 -- 
+2018-03-12 20:31:53 -- Epoch = 43/50:
+2018-03-12 20:33:10 -- train loss = 0.0071
+2018-03-12 20:33:10 -- dev loss = 0.0353
+2018-03-12 20:33:10 -- train ROC AUC = 0.9970
+2018-03-12 20:33:10 -- dev ROC AUC = 0.9559
+2018-03-12 20:33:10 -- 
+2018-03-12 20:33:10 -- Epoch = 44/50:
+2018-03-12 20:34:28 -- train loss = 0.0072
+2018-03-12 20:34:28 -- dev loss = 0.0364
+2018-03-12 20:34:28 -- train ROC AUC = 0.9970
+2018-03-12 20:34:28 -- dev ROC AUC = 0.9564
+2018-03-12 20:34:28 -- 
+2018-03-12 20:34:28 -- Epoch = 45/50:
+2018-03-12 20:35:46 -- train loss = 0.0074
+2018-03-12 20:35:46 -- dev loss = 0.0367
+2018-03-12 20:35:46 -- train ROC AUC = 0.9972
+2018-03-12 20:35:46 -- dev ROC AUC = 0.9559
+2018-03-12 20:35:46 -- 
+2018-03-12 20:35:46 -- Epoch = 46/50:
+2018-03-12 20:37:04 -- train loss = 0.0080
+2018-03-12 20:37:04 -- dev loss = 0.0361
+2018-03-12 20:37:04 -- train ROC AUC = 0.9971
+2018-03-12 20:37:04 -- dev ROC AUC = 0.9558
+2018-03-12 20:37:04 -- 
+2018-03-12 20:37:04 -- Epoch = 47/50:
+2018-03-12 20:38:23 -- train loss = 0.0068
+2018-03-12 20:38:23 -- dev loss = 0.0371
+2018-03-12 20:38:23 -- train ROC AUC = 0.9974
+2018-03-12 20:38:23 -- dev ROC AUC = 0.9560
+2018-03-12 20:38:23 -- 
+2018-03-12 20:38:23 -- Epoch = 48/50:
+2018-03-12 20:39:42 -- train loss = 0.0064
+2018-03-12 20:39:42 -- dev loss = 0.0381
+2018-03-12 20:39:42 -- train ROC AUC = 0.9976
+2018-03-12 20:39:42 -- dev ROC AUC = 0.9537
+2018-03-12 20:39:42 -- 
+2018-03-12 20:39:42 -- Epoch = 49/50:
+2018-03-12 20:41:02 -- train loss = 0.0062
+2018-03-12 20:41:02 -- dev loss = 0.0386
+2018-03-12 20:41:02 -- train ROC AUC = 0.9977
+2018-03-12 20:41:02 -- dev ROC AUC = 0.9540
+2018-03-12 20:41:02 -- 
+2018-03-12 20:41:02 -- Epoch = 50/50:
+2018-03-12 20:42:22 -- train loss = 0.0060
+2018-03-12 20:42:22 -- dev loss = 0.0384
+2018-03-12 20:42:22 -- train ROC AUC = 0.9974
+2018-03-12 20:42:22 -- dev ROC AUC = 0.9542
+2018-03-12 20:42:22 -- 
+2018-03-12 20:42:22 -- Testing...
+2018-03-12 20:42:22 -- Rebuilding model...
+2018-03-12 20:42:23 -- Restoring best model...
+2018-03-12 20:42:32 -- Restoring parameters from out/new_test_2/new_test_2.weights
+2018-03-12 20:42:33 -- Predicting labels for test set...
+2018-03-12 20:43:09 -- Saving test prediction...
+2018-03-12 20:43:10 -- 
+2018-03-12 20:43:10 -- Evaluating...
+2018-03-12 20:43:11 -- Mean column-wise ROC AUC - train = 0.9877
+2018-03-12 20:43:11 -- Mean column-wise ROC AUC - dev = 0.9683
+2018-03-12 20:43:11 -- ROC AUC of toxic - train = 0.9756
+2018-03-12 20:43:11 -- ROC AUC of toxic - dev = 0.9519
+2018-03-12 20:43:11 -- ROC AUC of severe_toxic - train = 0.9919
+2018-03-12 20:43:11 -- ROC AUC of severe_toxic - dev = 0.9852
+2018-03-12 20:43:11 -- ROC AUC of obscene - train = 0.9849
+2018-03-12 20:43:11 -- ROC AUC of obscene - dev = 0.9675
+2018-03-12 20:43:11 -- ROC AUC of threat - train = 0.9983
+2018-03-12 20:43:11 -- ROC AUC of threat - dev = 0.9810
+2018-03-12 20:43:11 -- ROC AUC of insult - train = 0.9832
+2018-03-12 20:43:11 -- ROC AUC of insult - dev = 0.9645
+2018-03-12 20:43:11 -- ROC AUC of identity_hate - train = 0.9923
+2018-03-12 20:43:11 -- ROC AUC of identity_hate - dev = 0.9596
+2018-03-12 20:43:12 -- Mean column-wise average precision - train = 0.7706
+2018-03-12 20:43:12 -- Mean column-wise average precision - dev = 0.5473
+2018-03-12 20:43:12 -- average precision of toxic - train = 0.8744
+2018-03-12 20:43:12 -- average precision of toxic - dev = 0.7890
+2018-03-12 20:43:12 -- average precision of severe_toxic - train = 0.5598
+2018-03-12 20:43:12 -- average precision of severe_toxic - dev = 0.4605
+2018-03-12 20:43:12 -- average precision of obscene - train = 0.8443
+2018-03-12 20:43:12 -- average precision of obscene - dev = 0.7635
+2018-03-12 20:43:13 -- average precision of threat - train = 0.8785
+2018-03-12 20:43:13 -- average precision of threat - dev = 0.3177
+2018-03-12 20:43:13 -- average precision of insult - train = 0.7739
+2018-03-12 20:43:13 -- average precision of insult - dev = 0.6768
+2018-03-12 20:43:13 -- average precision of identity_hate - train = 0.6927
+2018-03-12 20:43:13 -- average precision of identity_hate - dev = 0.2765
