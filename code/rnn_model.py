@@ -6,10 +6,12 @@ from tensorflow.contrib.rnn import (BasicRNNCell, GRUCell, LSTMCell,
                                     stack_bidirectional_dynamic_rnn)
 import logging
 import yaml
+import pickle
 from model import Model
 import preprocess
 import utils
 import evaluate
+from attention import attention
 
 
 # Example config for reference
@@ -30,7 +32,9 @@ example_config = {'exp_name': 'rnn_full_1',
                   'keep_prob': 0.6,
                   'n_layers': 2,
                   'bidirectional': True,
-                  'averaging': True
+                  'averaging': True,
+                  'attention': False,
+                  'attention_size': 10
                   }
 
 
@@ -86,11 +90,20 @@ class RNNModel(Model):
                                                             list_cells,
                                                             x,
                                                             dtype=tf.float32)
-            h_fw = self._agg_outputs(outputs[:, :, :self.config.state_size],
-                                     self.config.averaging)
-            h_bw = self._agg_outputs(outputs[:, :, self.config.state_size:],
-                                     self.config.averaging)
-            h = (h_fw + h_bw) / 2
+            outputs_fw = outputs[:, :, :self.config.state_size]
+            outputs_bw = outputs[:, :, self.config.state_size:]
+            # Add attention layer
+            if self.config.attention:
+                h, self.alphas = attention(outputs, self.mask_placeholder,
+                                           self.config.attention_size,
+                                           return_alphas=True)
+                h_fw = h[:, :self.config.state_size]
+                h_bw = h[:, self.config.state_size:]
+                h = (h_fw + h_bw) / 2
+            else:
+                h_fw = self._agg_outputs(outputs_fw, self.config.averaging)
+                h_bw = self._agg_outputs(outputs_bw, self.config.averaging)
+                h = (h_fw + h_bw) / 2
         else:
             # Create layers using MultiRNNCell()
             if self.config.cell_type == 'LSTM':
@@ -99,7 +112,13 @@ class RNNModel(Model):
                 multi_cells = MultiRNNCell(list_cells)
             # Shape of outputs = (batch_size, max_length, state_size)
             outputs, _ = tf.nn.dynamic_rnn(multi_cells, x, dtype=tf.float32)
-            h = self._agg_outputs(outputs, self.config.averaging)
+            if self.config.attention:
+                h, self.alphas = attention(outputs, self.mask_placeholder,
+                                           self.config.attention_size,
+                                           return_alphas=True)
+            else:
+                h = self._agg_outputs(outputs, self.config.averaging)
+
         # Add droput layer
         if self.config.dropout:
             h_dropout = tf.nn.dropout(h, self.dropout_placeholder)
@@ -268,6 +287,12 @@ class RNNModel(Model):
         y_prob = self._run_epoch_pred(sess, inputs, masks)
         return y_prob
 
+    def get_alphas(self, sess, tokens, masks):
+        inputs = self._transform_inputs(tokens)
+        feed = self._create_feed_dict(inputs, masks)
+        alphas = sess.run(self.alphas, feed_dict=feed)
+        return alphas
+
 
 # Module method
 def load_and_process(train_data_file, test_data_file=None,
@@ -414,3 +439,17 @@ def run(config, emb_data, train_dev_set, test_set=None,
                            plot=True, save_prefix=save_prefix)
     evaluate.evaluate_full(y_dict, metric='prc', names=label_names,
                            plot=True, save_prefix=save_prefix)
+
+
+# Module method
+def compute_alpha(config, emb_data, save_prefix, tokens, masks):
+    tf.reset_default_graph()
+    with tf.Graph().as_default() as graph:
+        obj = RNNModel(config, emb_data=emb_data)
+        init_op = tf.global_variables_initializer()
+        saver = tf.train.Saver()
+        with tf.Session(graph=graph) as sess:
+            sess.run(init_op)
+            saver.restore(sess, save_prefix+'.weights')
+            alphas = obj.get_alphas(sess, tokens, masks)
+    return alphas
