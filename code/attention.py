@@ -1,13 +1,16 @@
 import tensorflow as tf
 
 
-def attention(inputs, masks_batch, attention_size, time_major=False, return_alphas=False):
+def attention(inputs, masks, attention_size, time_major=False, return_alphas=False):
     """
+    Adapted from: https://github.com/ilivans/tf-rnn-attention/blob/master/attention.py
+    by adding masking to handle varying sentence lengths within batch.
+
     Attention mechanism layer which reduces RNN/Bi-RNN outputs with Attention vector.
     The idea was proposed in the article by Z. Yang et al., "Hierarchical Attention Networks
      for Document Classification", 2016: http://www.aclweb.org/anthology/N16-1174.
     Variables notation is also inherited from the article
-    
+
     Args:
         inputs: The Attention inputs.
             Matches outputs of RNN/Bi-RNN layer (not final state):
@@ -16,18 +19,14 @@ def attention(inputs, masks_batch, attention_size, time_major=False, return_alph
                         `[batch_size, max_time, cell.output_size]`.
                     If time_major == True, this must be a tensor of shape:
                         `[max_time, batch_size, cell.output_size]`.
-                In case of Bidirectional RNN, this must be a tuple (outputs_fw, outputs_bw) containing the forward and
-                the backward RNN outputs `Tensor`.
+                In case of Bidirectional RNN, this must be the forward and
+                the backward RNN outputs `Tensor` concatenated together.
                     If time_major == False (default),
-                        outputs_fw is a `Tensor` shaped:
-                        `[batch_size, max_time, cell_fw.output_size]`
-                        and outputs_bw is a `Tensor` shaped:
-                        `[batch_size, max_time, cell_bw.output_size]`.
+                        outputs is a `Tensor` shaped:
+                        `[batch_size, max_time, cell_fw.output_size + cell_bw.output_siz]`.
                     If time_major == True,
                         outputs_fw is a `Tensor` shaped:
-                        `[max_time, batch_size, cell_fw.output_size]`
-                        and outputs_bw is a `Tensor` shaped:
-                        `[max_time, batch_size, cell_bw.output_size]`.
+                        `[max_time, batch_size, cell_fw.output_size + cell_bw.output_size]`.
         attention_size: Linear size of the Attention weights.
         time_major: The shape format of the `inputs` Tensors.
             If true, these `Tensors` must be shaped `[max_time, batch_size, depth]`.
@@ -46,10 +45,6 @@ def attention(inputs, masks_batch, attention_size, time_major=False, return_alph
             `[batch_size, cell_fw.output_size + cell_bw.output_size]`.
     """
 
-#    if isinstance(inputs, tuple):
-#        # In case of Bi-RNN, concatenate the forward and the backward RNN outputs.
-#        inputs = tf.concat(inputs, 2)
-
     if time_major:
         # (T,B,D) => (B,T,D)
         inputs = tf.array_ops.transpose(inputs, [1, 0, 2])
@@ -63,18 +58,18 @@ def attention(inputs, masks_batch, attention_size, time_major=False, return_alph
 
     with tf.name_scope('v'):
         # Applying fully connected layer with non-linear activation to each of the B*T timestamps;
-        #  the shape of `v` is (B,T,D)*(D,A)=(B,T,A), where A=attention_size
+        # the shape of `v` is (B,T,D)*(D,A)=(B,T,A), where A=attention_size
         v = tf.tanh(tf.tensordot(inputs, w_omega, axes=1) + b_omega)
 
     # For each of the timestamps its vector of size A from `v` is reduced with `u` vector
     vu = tf.tensordot(v, u_omega, axes=1, name='vu')  # (B,T) shape
 
-    mask = tf.cast(masks_batch, tf.float32)  # (B,T) shape
-    masked_vu = vu * mask
+    # Implement masked softmax; all variables are of (B,T) shape
+    _masks = tf.cast(masks, tf.float32)
+    masked_vu = vu * _masks
     max_vu = tf.reduce_max(masked_vu, axis=1, keep_dims=True)
-    exp_vu = tf.exp(masked_vu - max_vu) * mask
-    alphas = exp_vu / tf.reduce_sum(exp_vu, axis=1, keep_dims=True)
-#    alphas = tf.nn.softmax(vu * masks, name='alphas')         # (B,T) shape
+    exp_vu = tf.exp(masked_vu - max_vu) * _masks
+    alphas = tf.div(exp_vu, tf.reduce_sum(exp_vu, axis=1, keep_dims=True), name='alphas')
 
     # Output of (Bi-)RNN is reduced with attention vector; the result has (B,D) shape
     output = tf.reduce_sum(inputs * tf.expand_dims(alphas, -1), 1)
