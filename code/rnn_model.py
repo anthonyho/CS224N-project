@@ -271,8 +271,10 @@ class RNNModel(Model):
             logger.info("")
             logger.info("Epoch = {}/{}:".format(epoch+1, self.config.n_epochs))
             loss_train, grad_norm = self._run_epoch_train(sess,
-                                                          inputs_train, masks_train,
-                                                          labels_train, shuffle=shuffle)
+                                                          inputs_train,
+                                                          masks_train,
+                                                          labels_train,
+                                                          shuffle=shuffle)
             loss_dev = self._run_epoch_dev(sess,
                                            inputs_dev, masks_dev,
                                            labels_dev, shuffle=False)
@@ -492,15 +494,21 @@ class PredictWithRNNModel(object):
         else:
             return y_prob
 
-    def predict_sentence(self, sentence, label_names=None):
+    def predict_sentence(self, sentence, label_names=None, return_alpha=True):
         if label_names is None:
             label_names = ['toxic', 'severe_toxic', 'obscene',
                            'threat', 'insult', 'identity_hate']
         tokens = preprocess.tokenize_single_string(sentence)
+        length = self.config['max_comment_size']
         padded_tokens, masks = preprocess.uniformize_comment_length(tokens,
-                                                                    self.config['max_comment_size'])
-        y_prob, alpha = self.predict_batch([padded_tokens], [masks],
-                                           return_alpha=True)
+                                                                    length)
+        results = self.predict_batch([padded_tokens], [masks],
+                                     return_alpha=return_alpha)
+        if return_alpha:
+            y_prob, alpha = results
+        else:
+            y_prob = results
         for name, prob in zip(label_names, y_prob[0]):
             print "Predicted probability of {} = {:.4f}".format(name, prob)
-        evaluate.highlight_sentence(tokens, alpha[0], masks)
+        if return_alpha:
+            evaluate.highlight_sentence(padded_tokens, alpha[0], masks)
