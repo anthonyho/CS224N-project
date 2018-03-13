@@ -145,6 +145,23 @@ def plot_metric_curve(y_true, y_prob, metric='roc', ax=None, **kwargs):
                             legendloc=(1.04, 0))
 
 
+def plot_grad_norm(list_grad_norm, save_prefix=None):
+    '''
+    Plot loss over epoch
+
+    Inputs:
+    - save_prefix: file path to save the figure (no extension)
+    '''
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.plot(list_grad_norm, linewidth=3, color=colors[3])
+    utils.setplotproperties(ax=ax, xlabel='Epoch', ylabel='Grad norm')
+    if save_prefix:
+        plt.savefig(save_prefix+'_grad_norm'+'.png', bbox_inches='tight')
+        plt.savefig(save_prefix+'_grad_norm'+'.eps', bbox_inches='tight')
+
+
 def plot_loss(list_loss_train, list_loss_dev=None,
               save_prefix=None):
     '''

@@ -35,7 +35,9 @@ example_config = {'exp_name': 'rnn_full_1',
                   'averaging': True,
                   'attention': False,
                   'attention_size': 10,
-                  'sparsemax': False
+                  'sparsemax': False,
+                  'clip_gradients': False,
+                  'max_grad_norm': 5
                   }
 
 
@@ -169,14 +171,19 @@ class RNNModel(Model):
 
     def _add_training_op(self, loss):
         optimizer = self.config.optimizer(learning_rate=self.config.lr)
-        train_op = optimizer.minimize(loss)
+        grad, var = zip(*optimizer.compute_gradients(loss))
+        if self.config.clip_gradients:
+            grad, _ = tf.clip_by_global_norm(grad, self.config.max_grad_norm)
+        self.grad_norm = tf.global_norm(grad)
+        train_op = optimizer.apply_gradients(zip(grad, var))
         return train_op
 
     def _train_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch,
                                       dropout=self.config.keep_prob)
-        _, loss = sess.run([self.train_op, self.loss], feed_dict=feed)
-        return loss
+        _, loss, grad_norm = sess.run([self.train_op, self.loss, self.grad_norm],
+                                      feed_dict=feed)
+        return loss, grad_norm
 
     def _loss_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch)
@@ -199,13 +206,18 @@ class RNNModel(Model):
                                       inputs, masks=masks, labels=labels,
                                       shuffle=shuffle)
         mean_loss = 0
+        mean_grad_norm = 0
         for i, curr_batch in enumerate(minibatches):
-            loss = self._train_on_batch(sess, *curr_batch)
+            loss, grad_norm = self._train_on_batch(sess, *curr_batch)
             mean_loss += loss
+            mean_grad_norm += grad_norm
             force = (i + 1) == n_minibatches
-            prog.update(i + 1, [('train_loss', loss)], force=force)
+            prog.update(i + 1,
+                        [('train_loss', loss), ('grad_norm', grad_norm)],
+                        force=force)
         mean_loss /= (i + 1)
-        return mean_loss
+        mean_grad_norm /= (i + 1)
+        return mean_loss, mean_grad_norm
 
     def _run_epoch_dev(self, sess, inputs, masks, labels, shuffle):
         minibatches = utils.minibatch(self.config.batch_size,
@@ -247,6 +259,7 @@ class RNNModel(Model):
         inputs_train = self._transform_inputs(tokens_train)
         inputs_dev = self._transform_inputs(tokens_dev)
         list_loss_train = []
+        list_grad_norm_train = []
         list_loss_dev = []
         list_score_train = []
         list_score_dev = []
@@ -256,9 +269,9 @@ class RNNModel(Model):
         for epoch in range(self.config.n_epochs):
             logger.info("")
             logger.info("Epoch = {}/{}:".format(epoch+1, self.config.n_epochs))
-            loss_train = self._run_epoch_train(sess,
-                                               inputs_train, masks_train,
-                                               labels_train, shuffle=shuffle)
+            loss_train, grad_norm_train = self._run_epoch_train(sess,
+                                                                inputs_train, masks_train,
+                                                                labels_train, shuffle=shuffle)
             loss_dev = self._run_epoch_dev(sess,
                                            inputs_dev, masks_dev,
                                            labels_dev, shuffle=False)
@@ -274,9 +287,11 @@ class RNNModel(Model):
                                              metric=metric)
             metric_name = evaluate.metric_long[metric]
             logger.info("train loss = {:.4f}".format(loss_train))
+            logger.info("train grad norm = {:.4f}".format(grad_norm_train))
             logger.info("dev loss = {:.4f}".format(loss_dev))
             logger.info("train {} = {:.4f}".format(metric_name, score_train))
             logger.info("dev {} = {:.4f}".format(metric_name, score_dev))
+            list_grad_norm_train.append(grad_norm_train)
             list_loss_train.append(loss_train)
             list_loss_dev.append(loss_dev)
             list_score_train.append(score_train)
@@ -290,7 +305,7 @@ class RNNModel(Model):
                 if saver:
                     logger.info("Saving new best model...")
                     saver.save(sess, save_prefix+'.weights')
-        return (list_loss_train, list_loss_dev,
+        return (list_grad_norm_train, list_loss_train, list_loss_dev,
                 list_score_train, list_score_dev,
                 best_y_prob_train, best_y_prob_dev)
 
@@ -413,7 +428,7 @@ def run(config, emb_data, train_dev_set, test_set=None,
                                 tokens_train, masks_train, labels_train,
                                 tokens_dev, masks_dev, labels_dev,
                                 saver=saver, save_prefix=save_prefix)
-            (list_loss_train, list_loss_dev,
+            (list_grad_norm_train, list_loss_train, list_loss_dev,
              list_score_train, list_score_dev,
              y_prob_train, y_prob_dev) = results
 
@@ -441,6 +456,8 @@ def run(config, emb_data, train_dev_set, test_set=None,
     # Evaluate and plot
     logger.info("")
     logger.info("Evaluating...")
+    evaluate.plot_grad_norm(list_grad_norm_train,
+                            save_prefix=save_prefix)
     evaluate.plot_loss(list_loss_train, list_loss_dev,
                        save_prefix=save_prefix)
     evaluate.plot_score(list_score_train, list_score_dev,
