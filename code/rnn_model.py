@@ -34,7 +34,8 @@ example_config = {'exp_name': 'rnn_full_1',
                   'bidirectional': True,
                   'averaging': True,
                   'attention': False,
-                  'attention_size': 10
+                  'attention_size': 10,
+                  'sparsemax': False
                   }
 
 
@@ -131,8 +132,8 @@ class RNNModel(Model):
                             initializer=tf.contrib.layers.xavier_initializer())
         b2 = tf.get_variable('b2', shape=b2_shape,
                              initializer=tf.constant_initializer())
-        pred = tf.matmul(h_dropout, U) + b2
-        return pred
+        logits = tf.matmul(h_dropout, U) + b2
+        return logits
 
     def _agg_outputs(self, outputs, averaging=True):
         if averaging:
@@ -151,12 +152,17 @@ class RNNModel(Model):
             h = tf.gather(outputs_flat, ind)
         return h
 
-    def _add_loss_op(self, pred):
+    def _add_loss_op(self, logits):
         labels = self.labels_placeholder
-        loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
-                                                       logits=pred)
-        loss = (tf.reduce_mean(loss * self.config.class_weights) /
-                self.config.mean_class_weights)
+        if self.config.sparsemax:
+            sparsemax_pred = tf.contrib.sparsemax.sparsemax(logits)
+            loss = tf.contrib.sparsemax.sparsemax_loss(logits, sparsemax_pred, labels)
+            loss = tf.reduce_mean(loss)
+        else:
+            loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
+                                                           logits=logits)
+            loss = (tf.reduce_mean(loss * self.config.class_weights) /
+                    self.config.mean_class_weights)
         return loss
 
     def _add_training_op(self, loss):
@@ -177,7 +183,11 @@ class RNNModel(Model):
 
     def _predict_on_batch(self, sess, inputs_batch, masks_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch)
-        prob = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
+        if self.config.sparsemax:
+            prob = sess.run(tf.contrib.sparsemax.sparsemax(self.pred),
+                            feed_dict=feed)
+        else:
+            prob = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
         return prob
 
     def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):

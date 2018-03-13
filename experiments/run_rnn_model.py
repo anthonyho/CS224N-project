@@ -253,7 +253,8 @@ config12 = {'exp_name': 'new_test_12',
           'bidirectional': True,
           'averaging': True,
           'attention': True,
-          'attention_size': 10
+          'attention_size': 10,
+            'sparsemax': False
           }
 
 list_configs = [config7,config8,config9,config10,config11,config12]
