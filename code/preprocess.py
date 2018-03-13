@@ -28,7 +28,7 @@ def load_tokenized_comments(file_name):
     return tokenized_comments
 
 
-def _tokenize_single_string(string):
+def tokenize_single_string(string):
     tokens = [token.replace("``", '"').replace("''", '"').lower()
               for token in nltk.word_tokenize(string)]
     return tokens
@@ -37,13 +37,13 @@ def _tokenize_single_string(string):
 def tokenize_df(df, column='comment_text'):
     list_list_tokens = []
     for index, item in df[column].iteritems():
-        list_tokens = _tokenize_single_string(item)
+        list_tokens = tokenize_single_string(item)
         list_list_tokens.append(list_tokens)
     return list_list_tokens
 
 
-def _uniformize_comment_length(list_tokens, length,
-                               pad_token=pad_token):
+def uniformize_comment_length(list_tokens, length,
+                              pad_token=pad_token):
     padded_list_tokens = list_tokens[:length]  # clip if too long
     mask = len(padded_list_tokens) * [True]
     while len(padded_list_tokens) < length:
@@ -56,8 +56,8 @@ def pad_comments(list_list_tokens, length=None, **kwargs):
     padded_list_list_tokens = []
     masks = []
     for list_tokens in list_list_tokens:
-        padded_list_tokens, mask = _uniformize_comment_length(list_tokens,
-                                                              length, **kwargs)
+        padded_list_tokens, mask = uniformize_comment_length(list_tokens,
+                                                             length, **kwargs)
         padded_list_list_tokens.append(padded_list_tokens)
         masks.append(mask)
     return padded_list_list_tokens, masks

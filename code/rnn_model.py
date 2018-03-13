@@ -155,8 +155,10 @@ class RNNModel(Model):
     def _add_loss_op(self, logits):
         labels = self.labels_placeholder
         if self.config.sparsemax:
-            sparsemax_pred = tf.contrib.sparsemax.sparsemax(logits)
-            loss = tf.contrib.sparsemax.sparsemax_loss(logits, sparsemax_pred, labels)
+            sparsemax = tf.contrib.sparsemax.sparsemax(logits)
+            loss = tf.contrib.sparsemax.sparsemax_loss(logits=logits,
+                                                       sparsemax=sparsemax,
+                                                       labels=labels)
             loss = tf.reduce_mean(loss)
         else:
             loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
@@ -451,15 +453,36 @@ def run(config, emb_data, train_dev_set, test_set=None,
                            plot=True, save_prefix=save_prefix)
 
 
-# Module method
-def compute_alpha(config, emb_data, save_prefix, tokens, masks):
-    tf.reset_default_graph()
-    with tf.Graph().as_default() as graph:
-        obj = RNNModel(config, emb_data=emb_data)
+class PredictWithRNNModel(object):
+
+    def __init__(self, config, emb_data, save_prefix):
+        self.config = config
+        tf.reset_default_graph()
+        self.graph = tf.Graph().as_default()
+        self.obj = RNNModel(self.config, emb_data=emb_data)
         init_op = tf.global_variables_initializer()
-        saver = tf.train.Saver()
-        with tf.Session(graph=graph) as sess:
-            sess.run(init_op)
-            saver.restore(sess, save_prefix+'.weights')
-            alphas = obj.get_alphas(sess, tokens, masks)
-    return alphas
+        self.saver = tf.train.Saver()
+        self.sess = tf.Session()
+        self.sess.run(init_op)
+        self.saver.restore(self.sess, save_prefix+'.weights')
+
+    def predict_batch(self, tokens, masks, return_alpha=True):
+        y_prob = self.obj.predict(self.sess, tokens, masks)
+        if return_alpha:
+            alphas = self.obj.get_alphas(self.sess, tokens, masks)
+            return y_prob, alphas
+        else:
+            return y_prob
+
+    def predict_sentence(self, sentence, label_names=None):
+        if label_names is None:
+            label_names = ['toxic', 'severe_toxic', 'obscene',
+                           'threat', 'insult', 'identity_hate']
+        tokens = preprocess.tokenize_single_string(sentence)
+        padded_tokens, masks = preprocess.uniformize_comment_length(tokens,
+                                                                    self.config['max_comment_size'])
+        y_prob, alpha = self.predict_batch([padded_tokens], [masks],
+                                           return_alpha=True)
+        for name, prob in zip(label_names, y_prob[0]):
+            print "Predicted probability of {} = {:.4f}".format(name, prob)
+        evaluate.highlight_sentence(tokens, alpha[0], masks)
