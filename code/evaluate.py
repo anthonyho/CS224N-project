@@ -265,6 +265,7 @@ def highlight_sentence(sentence, alphas, masks=None, max_width=80):
     mesh = ax.pcolormesh(matrix[::-1], cmap=cmap)
     mesh.update_scalarmappable()
 
+    # Add characters
     for i, line in enumerate(paragraph):
         for j, char in enumerate(line):
             x_pos = j + offset_x
