@@ -181,7 +181,8 @@ class RNNModel(Model):
     def _train_on_batch(self, sess, inputs_batch, masks_batch, labels_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch, labels_batch,
                                       dropout=self.config.keep_prob)
-        _, loss, grad_norm = sess.run([self.train_op, self.loss, self.grad_norm],
+        _, loss, grad_norm = sess.run([self.train_op, self.loss,
+                                       self.grad_norm],
                                       feed_dict=feed)
         return loss, grad_norm
 
@@ -258,8 +259,8 @@ class RNNModel(Model):
                             datefmt='%Y-%m-%d %H:%M:%S', level=logging.INFO)
         inputs_train = self._transform_inputs(tokens_train)
         inputs_dev = self._transform_inputs(tokens_dev)
+        list_grad_norm = []
         list_loss_train = []
-        list_grad_norm_train = []
         list_loss_dev = []
         list_score_train = []
         list_score_dev = []
@@ -269,9 +270,9 @@ class RNNModel(Model):
         for epoch in range(self.config.n_epochs):
             logger.info("")
             logger.info("Epoch = {}/{}:".format(epoch+1, self.config.n_epochs))
-            loss_train, grad_norm_train = self._run_epoch_train(sess,
-                                                                inputs_train, masks_train,
-                                                                labels_train, shuffle=shuffle)
+            loss_train, grad_norm = self._run_epoch_train(sess,
+                                                          inputs_train, masks_train,
+                                                          labels_train, shuffle=shuffle)
             loss_dev = self._run_epoch_dev(sess,
                                            inputs_dev, masks_dev,
                                            labels_dev, shuffle=False)
@@ -286,12 +287,12 @@ class RNNModel(Model):
                                              y_prob_dev, labels_dev,
                                              metric=metric)
             metric_name = evaluate.metric_long[metric]
+            logger.info("grad norm = {:.4f}".format(grad_norm))
             logger.info("train loss = {:.4f}".format(loss_train))
-            logger.info("train grad norm = {:.4f}".format(grad_norm_train))
             logger.info("dev loss = {:.4f}".format(loss_dev))
             logger.info("train {} = {:.4f}".format(metric_name, score_train))
             logger.info("dev {} = {:.4f}".format(metric_name, score_dev))
-            list_grad_norm_train.append(grad_norm_train)
+            list_grad_norm.append(grad_norm)
             list_loss_train.append(loss_train)
             list_loss_dev.append(loss_dev)
             list_score_train.append(score_train)
@@ -305,7 +306,7 @@ class RNNModel(Model):
                 if saver:
                     logger.info("Saving new best model...")
                     saver.save(sess, save_prefix+'.weights')
-        return (list_grad_norm_train, list_loss_train, list_loss_dev,
+        return (list_grad_norm, list_loss_train, list_loss_dev,
                 list_score_train, list_score_dev,
                 best_y_prob_train, best_y_prob_dev)
 
@@ -428,7 +429,7 @@ def run(config, emb_data, train_dev_set, test_set=None,
                                 tokens_train, masks_train, labels_train,
                                 tokens_dev, masks_dev, labels_dev,
                                 saver=saver, save_prefix=save_prefix)
-            (list_grad_norm_train, list_loss_train, list_loss_dev,
+            (list_grad_norm, list_loss_train, list_loss_dev,
              list_score_train, list_score_dev,
              y_prob_train, y_prob_dev) = results
 
@@ -456,7 +457,7 @@ def run(config, emb_data, train_dev_set, test_set=None,
     # Evaluate and plot
     logger.info("")
     logger.info("Evaluating...")
-    evaluate.plot_grad_norm(list_grad_norm_train,
+    evaluate.plot_grad_norm(list_grad_norm,
                             save_prefix=save_prefix)
     evaluate.plot_loss(list_loss_train, list_loss_dev,
                        save_prefix=save_prefix)
