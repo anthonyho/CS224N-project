@@ -153,7 +153,7 @@ config7 = {'exp_name': 'new_test_7',
           'bidirectional': True,
           'averaging': True,
 	  'attention': False,
-	  'attention_size': 1
+	  'attention_size': 10
           }
 
 config8 = {'exp_name': 'new_test_8',
@@ -171,7 +171,9 @@ config8 = {'exp_name': 'new_test_8',
           'keep_prob': 0.5,
           'n_layers': 2,
           'bidirectional': True,
-          'averaging': True
+          'averaging': True,
+	  'attention': False,
+          'attention_size': 10
           }
 
 config9 = {'exp_name': 'new_test_9',
@@ -183,16 +185,18 @@ config9 = {'exp_name': 'new_test_9',
           'state_size': 50,
           'lr': .0005,
           'batch_size': 1024,
-          'cell_type': 'GRU',
+          'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
           'keep_prob': 0.5,
-          'n_layers': 2,
-          'bidirectional': True,
-          'averaging': True
+          'n_layers': 1,
+          'bidirectional': False,
+          'averaging': True,
+	  'attention': True,
+          'attention_size': 10
           }
 
-config10 = {'exp_name': 'new_test_8',
+config10 = {'exp_name': 'new_test_10',
           'n_epochs': 50,
           'embed_size': embed_size,
           'n_labels': len(label_names),
@@ -201,16 +205,18 @@ config10 = {'exp_name': 'new_test_8',
           'state_size': 50,
           'lr': .0005,
           'batch_size': 1024,
-          'cell_type': 'GRU',
+          'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
           'keep_prob': 0.5,
           'n_layers': 2,
-          'bidirectional': True,
-          'averaging': True
+          'bidirectional': False,
+          'averaging': True,
+	  'attention': True,
+          'attention_size': 10
           }
 
-config11 = {'exp_name': 'new_test_8',
+config11 = {'exp_name': 'new_test_11',
           'n_epochs': 50,
           'embed_size': embed_size,
           'n_labels': len(label_names),
@@ -219,16 +225,38 @@ config11 = {'exp_name': 'new_test_8',
           'state_size': 50,
           'lr': .0005,
           'batch_size': 1024,
-          'cell_type': 'GRU',
+          'cell_type': 'LSTM',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
+          'n_layers': 1,
+          'bidirectional': True,
+          'averaging': True,
+	  'attention': True,
+          'attention_size': 10
+          }
+
+config12 = {'exp_name': 'new_test_12',
+          'n_epochs': 50,
+          'embed_size': embed_size,
+          'n_labels': len(label_names),
+          'class_weights': class_weights,
+          'max_comment_size': max_comment_size,
+          'state_size': 50,
+          'lr': .0005,
+          'batch_size': 1024,
+          'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
           'keep_prob': 0.5,
           'n_layers': 2,
           'bidirectional': True,
-          'averaging': True
+          'averaging': True,
+          'attention': True,
+          'attention_size': 10
           }
 
-list_configs = [config7,config8]
+list_configs = [config7,config8,config9,config10,config11,config12]
 
 
 if __name__ == '__main__':
