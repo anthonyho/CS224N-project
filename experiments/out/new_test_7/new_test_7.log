@@ -1,0 +1,23 @@
+averaging: true
+batch_size: 1024
+bidirectional: true
+cell_kwargs: {}
+cell_type: GRU
+class_weights: [1.0, 9.58871448, 1.810155, 31.99581504, 1.94160208, 10.88540896]
+dropout: true
+embed_size: 300
+exp_name: new_test_7
+keep_prob: 0.5
+lr: 0.0005
+max_comment_size: 250
+n_epochs: 50
+n_labels: 6
+n_layers: 1
+state_size: 500
+2018-03-13 02:40:14 -- 
+2018-03-13 02:40:14 -- Initializing...
+2018-03-13 02:40:14 -- Training...
+2018-03-13 02:40:14 -- Building model...
+2018-03-13 02:40:15 -- Training model...
+2018-03-13 02:40:34 -- 
+2018-03-13 02:40:34 -- Epoch = 1/50:

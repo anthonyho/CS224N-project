@@ -142,7 +142,7 @@ config7 = {'exp_name': 'new_test_7',
           'n_labels': len(label_names),
           'class_weights': class_weights,
           'max_comment_size': max_comment_size,
-          'state_size': 500,
+          'state_size': 50,
           'lr': .0005,
           'batch_size': 1024,
           'cell_type': 'GRU',
@@ -151,7 +151,9 @@ config7 = {'exp_name': 'new_test_7',
           'keep_prob': 0.5,
           'n_layers': 1,
           'bidirectional': True,
-          'averaging': True
+          'averaging': True,
+	  'attention': False,
+	  'attention_size': 1
           }
 
 config8 = {'exp_name': 'new_test_8',
@@ -172,7 +174,61 @@ config8 = {'exp_name': 'new_test_8',
           'averaging': True
           }
 
-list_configs = [config1,config2,config3,config4,config5,config6,config7,config8]
+config9 = {'exp_name': 'new_test_9',
+          'n_epochs': 50,
+          'embed_size': embed_size,
+          'n_labels': len(label_names),
+          'class_weights': class_weights,
+          'max_comment_size': max_comment_size,
+          'state_size': 50,
+          'lr': .0005,
+          'batch_size': 1024,
+          'cell_type': 'GRU',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
+          'n_layers': 2,
+          'bidirectional': True,
+          'averaging': True
+          }
+
+config10 = {'exp_name': 'new_test_8',
+          'n_epochs': 50,
+          'embed_size': embed_size,
+          'n_labels': len(label_names),
+          'class_weights': class_weights,
+          'max_comment_size': max_comment_size,
+          'state_size': 50,
+          'lr': .0005,
+          'batch_size': 1024,
+          'cell_type': 'GRU',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
+          'n_layers': 2,
+          'bidirectional': True,
+          'averaging': True
+          }
+
+config11 = {'exp_name': 'new_test_8',
+          'n_epochs': 50,
+          'embed_size': embed_size,
+          'n_labels': len(label_names),
+          'class_weights': class_weights,
+          'max_comment_size': max_comment_size,
+          'state_size': 50,
+          'lr': .0005,
+          'batch_size': 1024,
+          'cell_type': 'GRU',
+          'cell_kwargs': {},
+          'dropout': True,
+          'keep_prob': 0.5,
+          'n_layers': 2,
+          'bidirectional': True,
+          'averaging': True
+          }
+
+list_configs = [config7,config8]
 
 
 if __name__ == '__main__':
