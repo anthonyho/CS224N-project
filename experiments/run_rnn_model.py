@@ -28,20 +28,20 @@ out_dir = 'out/'
 # Define configs
 debug = False
 
-config1 = {'exp_name': 'final_test_1',
+config1 = {'exp_name': 'final_test_1_big',
           'n_epochs': 20,
           'embed_size': embed_size,
           'n_labels': len(label_names),
           'class_weights': class_weights,
           'max_comment_size': max_comment_size,
-          'state_size': 256,
+          'state_size': 512,
           'lr': .0005,
-          'batch_size': 256,
+          'batch_size': 128,
           'cell_type': 'LSTM',
           'cell_kwargs': {},
           'dropout': True,
           'keep_prob': 0.5,
-          'n_layers': 2,
+          'n_layers': 1,
           'bidirectional': True,
           'averaging': False, #overwritten by attention
           'attention': True,
@@ -212,7 +212,7 @@ config8 = {'exp_name': 'final_test_8',
           'max_grad_norm': 5
 }
 
-list_configs = [config1,config2,config3,config4,config5,config6,config7]
+list_configs = [config1]
 
 
 if __name__ == '__main__':
