@@ -12,126 +12,128 @@ embed_size: 300
 exp_name: final_test_1_big_full
 keep_prob: 0.5
 lr: 0.0005
-max_comment_size: 250
+max_comment_size: 500
 max_grad_norm: 5
 n_epochs: 10
 n_labels: 6
 n_layers: 1
 sparsemax: false
 state_size: 512
-2018-03-16 23:29:33 -- 
-2018-03-16 23:29:33 -- Initializing...
-2018-03-16 23:29:33 -- Training...
-2018-03-16 23:29:33 -- Building model...
-2018-03-16 23:29:37 -- Training model...
-2018-03-16 23:31:36 -- 
-2018-03-16 23:31:36 -- Epoch = 1/10:
-2018-03-16 23:50:43 -- grad norm = 0.0503
-2018-03-16 23:50:43 -- train loss = 0.0299
-2018-03-16 23:50:43 -- dev loss = 0.0188
-2018-03-16 23:50:43 -- train ROC AUC = 0.9853
-2018-03-16 23:50:43 -- dev ROC AUC = 0.9845
-2018-03-16 23:50:43 -- New best dev ROC AUC = 0.9845
-2018-03-16 23:50:43 -- Saving new best model...
-2018-03-16 23:50:46 -- 
-2018-03-16 23:50:46 -- Epoch = 2/10:
-2018-03-17 00:10:06 -- grad norm = 0.0345
-2018-03-17 00:10:06 -- train loss = 0.0184
-2018-03-17 00:10:06 -- dev loss = 0.0188
-2018-03-17 00:10:06 -- train ROC AUC = 0.9902
-2018-03-17 00:10:06 -- dev ROC AUC = 0.9869
-2018-03-17 00:10:06 -- New best dev ROC AUC = 0.9869
-2018-03-17 00:10:06 -- Saving new best model...
-2018-03-17 00:10:25 -- 
-2018-03-17 00:10:25 -- Epoch = 3/10:
-2018-03-17 00:30:05 -- grad norm = 0.0300
-2018-03-17 00:30:05 -- train loss = 0.0158
-2018-03-17 00:30:05 -- dev loss = 0.0182
-2018-03-17 00:30:05 -- train ROC AUC = 0.9923
-2018-03-17 00:30:05 -- dev ROC AUC = 0.9867
-2018-03-17 00:30:05 -- 
-2018-03-17 00:30:05 -- Epoch = 4/10:
-2018-03-17 00:50:07 -- grad norm = 0.0277
-2018-03-17 00:50:07 -- train loss = 0.0138
-2018-03-17 00:50:07 -- dev loss = 0.0180
-2018-03-17 00:50:07 -- train ROC AUC = 0.9939
-2018-03-17 00:50:07 -- dev ROC AUC = 0.9862
-2018-03-17 00:50:07 -- 
-2018-03-17 00:50:07 -- Epoch = 5/10:
-2018-03-17 01:10:31 -- grad norm = 0.0242
-2018-03-17 01:10:31 -- train loss = 0.0120
-2018-03-17 01:10:31 -- dev loss = 0.0193
-2018-03-17 01:10:31 -- train ROC AUC = 0.9953
-2018-03-17 01:10:31 -- dev ROC AUC = 0.9853
-2018-03-17 01:10:31 -- 
-2018-03-17 01:10:31 -- Epoch = 6/10:
-2018-03-17 01:31:21 -- grad norm = 0.0222
-2018-03-17 01:31:21 -- train loss = 0.0104
-2018-03-17 01:31:21 -- dev loss = 0.0203
-2018-03-17 01:31:21 -- train ROC AUC = 0.9961
-2018-03-17 01:31:21 -- dev ROC AUC = 0.9848
-2018-03-17 01:31:21 -- 
-2018-03-17 01:31:21 -- Epoch = 7/10:
-2018-03-17 01:52:31 -- grad norm = 0.0205
-2018-03-17 01:52:31 -- train loss = 0.0092
-2018-03-17 01:52:31 -- dev loss = 0.0204
-2018-03-17 01:52:31 -- train ROC AUC = 0.9967
-2018-03-17 01:52:31 -- dev ROC AUC = 0.9843
-2018-03-17 01:52:31 -- 
-2018-03-17 01:52:31 -- Epoch = 8/10:
-2018-03-17 02:14:03 -- grad norm = 0.0196
-2018-03-17 02:14:03 -- train loss = 0.0082
-2018-03-17 02:14:03 -- dev loss = 0.0236
-2018-03-17 02:14:03 -- train ROC AUC = 0.9973
-2018-03-17 02:14:03 -- dev ROC AUC = 0.9808
-2018-03-17 02:14:03 -- 
-2018-03-17 02:14:03 -- Epoch = 9/10:
-2018-03-17 02:35:58 -- grad norm = 0.0187
-2018-03-17 02:35:58 -- train loss = 0.0073
-2018-03-17 02:35:58 -- dev loss = 0.0236
-2018-03-17 02:35:58 -- train ROC AUC = 0.9976
-2018-03-17 02:35:58 -- dev ROC AUC = 0.9815
-2018-03-17 02:35:58 -- 
-2018-03-17 02:35:58 -- Epoch = 10/10:
-2018-03-17 02:58:18 -- grad norm = 0.0168
-2018-03-17 02:58:18 -- train loss = 0.0064
-2018-03-17 02:58:18 -- dev loss = 0.0265
-2018-03-17 02:58:18 -- train ROC AUC = 0.9980
-2018-03-17 02:58:18 -- dev ROC AUC = 0.9712
-2018-03-17 02:58:18 -- 
-2018-03-17 02:58:18 -- Testing...
-2018-03-17 02:58:18 -- Rebuilding model...
-2018-03-17 02:58:19 -- Restoring best model...
-2018-03-17 02:58:54 -- Restoring parameters from out/final_test_1_big_full/final_test_1_big_full.weights
-2018-03-17 02:58:54 -- Predicting labels for test set...
-2018-03-17 03:05:17 -- Saving test prediction...
-2018-03-17 03:05:18 -- 
-2018-03-17 03:05:18 -- Evaluating...
-2018-03-17 03:05:19 -- Mean column-wise ROC AUC - train = 0.9902
-2018-03-17 03:05:19 -- Mean column-wise ROC AUC - dev = 0.9869
-2018-03-17 03:05:20 -- ROC AUC of toxic - train = 0.9826
-2018-03-17 03:05:20 -- ROC AUC of toxic - dev = 0.9770
-2018-03-17 03:05:20 -- ROC AUC of severe_toxic - train = 0.9918
-2018-03-17 03:05:20 -- ROC AUC of severe_toxic - dev = 0.9887
-2018-03-17 03:05:20 -- ROC AUC of obscene - train = 0.9920
-2018-03-17 03:05:20 -- ROC AUC of obscene - dev = 0.9955
-2018-03-17 03:05:20 -- ROC AUC of threat - train = 0.9969
-2018-03-17 03:05:20 -- ROC AUC of threat - dev = 0.9939
-2018-03-17 03:05:20 -- ROC AUC of insult - train = 0.9877
-2018-03-17 03:05:20 -- ROC AUC of insult - dev = 0.9796
-2018-03-17 03:05:20 -- ROC AUC of identity_hate - train = 0.9899
-2018-03-17 03:05:20 -- ROC AUC of identity_hate - dev = 0.9864
-2018-03-17 03:05:21 -- Mean column-wise average precision - train = 0.7296
-2018-03-17 03:05:21 -- Mean column-wise average precision - dev = 0.6165
-2018-03-17 03:05:21 -- average precision of toxic - train = 0.9034
-2018-03-17 03:05:21 -- average precision of toxic - dev = 0.9043
-2018-03-17 03:05:21 -- average precision of severe_toxic - train = 0.5210
-2018-03-17 03:05:21 -- average precision of severe_toxic - dev = 0.4760
-2018-03-17 03:05:22 -- average precision of obscene - train = 0.9056
-2018-03-17 03:05:22 -- average precision of obscene - dev = 0.9279
-2018-03-17 03:05:22 -- average precision of threat - train = 0.6691
-2018-03-17 03:05:22 -- average precision of threat - dev = 0.2669
-2018-03-17 03:05:22 -- average precision of insult - train = 0.8029
-2018-03-17 03:05:22 -- average precision of insult - dev = 0.7705
-2018-03-17 03:05:22 -- average precision of identity_hate - train = 0.5759
-2018-03-17 03:05:22 -- average precision of identity_hate - dev = 0.3530
+2018-03-17 03:55:00 -- 
+2018-03-17 03:55:00 -- Initializing...
+2018-03-17 03:55:00 -- Training...
+2018-03-17 03:55:00 -- Building model...
+2018-03-17 03:55:05 -- Training model...
+2018-03-17 03:58:39 -- 
+2018-03-17 03:58:39 -- Epoch = 1/10:
+2018-03-17 04:27:42 -- grad norm = 0.0641
+2018-03-17 04:27:42 -- train loss = 0.0341
+2018-03-17 04:27:42 -- dev loss = 0.0200
+2018-03-17 04:27:42 -- train ROC AUC = 0.9827
+2018-03-17 04:27:42 -- dev ROC AUC = 0.9817
+2018-03-17 04:27:42 -- New best dev ROC AUC = 0.9817
+2018-03-17 04:27:42 -- Saving new best model...
+2018-03-17 04:28:01 -- 
+2018-03-17 04:28:01 -- Epoch = 2/10:
+2018-03-17 04:57:25 -- grad norm = 0.0417
+2018-03-17 04:57:25 -- train loss = 0.0197
+2018-03-17 04:57:25 -- dev loss = 0.0176
+2018-03-17 04:57:25 -- train ROC AUC = 0.9882
+2018-03-17 04:57:25 -- dev ROC AUC = 0.9849
+2018-03-17 04:57:25 -- New best dev ROC AUC = 0.9849
+2018-03-17 04:57:25 -- Saving new best model...
+2018-03-17 04:57:43 -- 
+2018-03-17 04:57:43 -- Epoch = 3/10:
+2018-03-17 05:27:26 -- grad norm = 0.0378
+2018-03-17 05:27:26 -- train loss = 0.0170
+2018-03-17 05:27:26 -- dev loss = 0.0174
+2018-03-17 05:27:26 -- train ROC AUC = 0.9908
+2018-03-17 05:27:26 -- dev ROC AUC = 0.9859
+2018-03-17 05:27:26 -- New best dev ROC AUC = 0.9859
+2018-03-17 05:27:26 -- Saving new best model...
+2018-03-17 05:27:44 -- 
+2018-03-17 05:27:44 -- Epoch = 4/10:
+2018-03-17 05:57:52 -- grad norm = 0.0339
+2018-03-17 05:57:52 -- train loss = 0.0148
+2018-03-17 05:57:52 -- dev loss = 0.0176
+2018-03-17 05:57:52 -- train ROC AUC = 0.9933
+2018-03-17 05:57:52 -- dev ROC AUC = 0.9858
+2018-03-17 05:57:52 -- 
+2018-03-17 05:57:52 -- Epoch = 5/10:
+2018-03-17 06:28:18 -- grad norm = 0.0301
+2018-03-17 06:28:18 -- train loss = 0.0128
+2018-03-17 06:28:18 -- dev loss = 0.0186
+2018-03-17 06:28:18 -- train ROC AUC = 0.9946
+2018-03-17 06:28:18 -- dev ROC AUC = 0.9847
+2018-03-17 06:28:18 -- 
+2018-03-17 06:28:18 -- Epoch = 6/10:
+2018-03-17 06:59:06 -- grad norm = 0.0269
+2018-03-17 06:59:06 -- train loss = 0.0112
+2018-03-17 06:59:06 -- dev loss = 0.0195
+2018-03-17 06:59:06 -- train ROC AUC = 0.9956
+2018-03-17 06:59:06 -- dev ROC AUC = 0.9831
+2018-03-17 06:59:06 -- 
+2018-03-17 06:59:06 -- Epoch = 7/10:
+2018-03-17 07:30:13 -- grad norm = 0.0250
+2018-03-17 07:30:13 -- train loss = 0.0098
+2018-03-17 07:30:13 -- dev loss = 0.0208
+2018-03-17 07:30:13 -- train ROC AUC = 0.9962
+2018-03-17 07:30:13 -- dev ROC AUC = 0.9812
+2018-03-17 07:30:13 -- 
+2018-03-17 07:30:13 -- Epoch = 8/10:
+2018-03-17 08:01:44 -- grad norm = 0.0226
+2018-03-17 08:01:44 -- train loss = 0.0087
+2018-03-17 08:01:44 -- dev loss = 0.0234
+2018-03-17 08:01:44 -- train ROC AUC = 0.9968
+2018-03-17 08:01:44 -- dev ROC AUC = 0.9772
+2018-03-17 08:01:44 -- 
+2018-03-17 08:01:44 -- Epoch = 9/10:
+2018-03-17 08:33:41 -- grad norm = 0.0208
+2018-03-17 08:33:41 -- train loss = 0.0078
+2018-03-17 08:33:41 -- dev loss = 0.0263
+2018-03-17 08:33:41 -- train ROC AUC = 0.9973
+2018-03-17 08:33:41 -- dev ROC AUC = 0.9756
+2018-03-17 08:33:41 -- 
+2018-03-17 08:33:41 -- Epoch = 10/10:
+2018-03-17 09:06:07 -- grad norm = 0.0194
+2018-03-17 09:06:07 -- train loss = 0.0068
+2018-03-17 09:06:07 -- dev loss = 0.0275
+2018-03-17 09:06:07 -- train ROC AUC = 0.9978
+2018-03-17 09:06:07 -- dev ROC AUC = 0.9736
+2018-03-17 09:06:07 -- 
+2018-03-17 09:06:07 -- Testing...
+2018-03-17 09:06:07 -- Rebuilding model...
+2018-03-17 09:06:11 -- Restoring best model...
+2018-03-17 09:06:46 -- Restoring parameters from out/final_test_1_big_full/final_test_1_big_full.weights
+2018-03-17 09:06:47 -- Predicting labels for test set...
+2018-03-17 09:17:55 -- Saving test prediction...
+2018-03-17 09:17:56 -- 
+2018-03-17 09:17:56 -- Evaluating...
+2018-03-17 09:17:57 -- Mean column-wise ROC AUC - train = 0.9908
+2018-03-17 09:17:57 -- Mean column-wise ROC AUC - dev = 0.9859
+2018-03-17 09:17:58 -- ROC AUC of toxic - train = 0.9829
+2018-03-17 09:17:58 -- ROC AUC of toxic - dev = 0.9752
+2018-03-17 09:17:58 -- ROC AUC of severe_toxic - train = 0.9923
+2018-03-17 09:17:58 -- ROC AUC of severe_toxic - dev = 0.9888
+2018-03-17 09:17:58 -- ROC AUC of obscene - train = 0.9926
+2018-03-17 09:17:58 -- ROC AUC of obscene - dev = 0.9903
+2018-03-17 09:17:58 -- ROC AUC of threat - train = 0.9984
+2018-03-17 09:17:58 -- ROC AUC of threat - dev = 0.9920
+2018-03-17 09:17:58 -- ROC AUC of insult - train = 0.9881
+2018-03-17 09:17:58 -- ROC AUC of insult - dev = 0.9831
+2018-03-17 09:17:58 -- ROC AUC of identity_hate - train = 0.9904
+2018-03-17 09:17:58 -- ROC AUC of identity_hate - dev = 0.9857
+2018-03-17 09:17:59 -- Mean column-wise average precision - train = 0.7533
+2018-03-17 09:17:59 -- Mean column-wise average precision - dev = 0.6695
+2018-03-17 09:17:59 -- average precision of toxic - train = 0.9034
+2018-03-17 09:17:59 -- average precision of toxic - dev = 0.8778
+2018-03-17 09:17:59 -- average precision of severe_toxic - train = 0.5386
+2018-03-17 09:17:59 -- average precision of severe_toxic - dev = 0.4453
+2018-03-17 09:17:59 -- average precision of obscene - train = 0.9087
+2018-03-17 09:17:59 -- average precision of obscene - dev = 0.8921
+2018-03-17 09:18:00 -- average precision of threat - train = 0.7489
+2018-03-17 09:18:00 -- average precision of threat - dev = 0.5097
+2018-03-17 09:18:00 -- average precision of insult - train = 0.8109
+2018-03-17 09:18:00 -- average precision of insult - dev = 0.7737
+2018-03-17 09:18:00 -- average precision of identity_hate - train = 0.6090
+2018-03-17 09:18:00 -- average precision of identity_hate - dev = 0.5182

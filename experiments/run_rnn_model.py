@@ -11,7 +11,7 @@ import rnn_model
 
 # Define global variables
 embed_size = 300
-max_comment_size = 250
+max_comment_size = 500
 fraction_dev = 0.3
 label_names = ['toxic', 'severe_toxic', 'obscene', 'threat', 'insult', 'identity_hate']
 class_weights = [1.0, 9.58871448, 1.810155, 31.99581504, 1.94160208, 10.88540896]
@@ -28,8 +28,8 @@ out_dir = 'out/'
 # Define configs
 debug = False
 
-config1 = {'exp_name': 'final_test_1_big',
-          'n_epochs': 20,
+config1 = {'exp_name': 'final_test_1_big_full',
+          'n_epochs': 10,
           'embed_size': embed_size,
           'n_labels': len(label_names),
           'class_weights': class_weights,
