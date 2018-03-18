@@ -25,24 +25,24 @@ out_dir = 'out/'
 
 
 # Define configs
-debug = False
+debug = 4000
 
-config = {'exp_name': 'ff_full_test',
-          'n_epochs': 500,
-          'n_features': embed_size,
-          'n_labels': len(label_names),
-          'class_weights': class_weights,
-          'n_layers': 2,
-          'hidden_sizes': [20, 20],  # int or list of int
-          'lr': .0005,
-          'batch_size': 2048,
-          'dropout': True,
-          'keep_prob': 0.6,
-          'activation': tf.nn.relu,
-          'optimizer': tf.train.AdamOptimizer
-          }
+config1 = {'exp_name': 'nn_test',
+           'n_epochs': 500,
+           'n_features': embed_size,
+           'n_labels': len(label_names),
+           'class_weights': class_weights,
+           'n_layers': 2,
+           'hidden_sizes': [20, 20],  # int or list of int
+           'lr': .0005,
+           'batch_size': 2048,
+           'dropout': True,
+           'keep_prob': 0.6,
+           'activation': tf.nn.relu,
+           'optimizer': tf.train.AdamOptimizer
+           }
 
-list_configs = [config]
+list_configs = [config1]
 
 
 if __name__ == '__main__':

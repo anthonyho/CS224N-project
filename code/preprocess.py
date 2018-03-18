@@ -10,6 +10,7 @@ import vocab
 id_unknown = 1
 pad_token = u'<pad>'
 glove_dir = '../data/glove'
+vulgarities = ['bitch', 'cock', 'fuck', 'shit', 'dick', 'cunt']
 
 
 def load_data(file_name, debug=False):
@@ -63,21 +64,23 @@ def pad_comments(list_list_tokens, length=None, **kwargs):
     return padded_list_list_tokens, masks
 
 
-#def tokens_to_ids(list_list_tokens, word2id, id_unknown=id_unknown):
-#    return [[word2id.get(token, id_unknown) for token in list_tokens]
-#            for list_tokens in list_list_tokens]
+# def tokens_to_ids(list_list_tokens, word2id, id_unknown=id_unknown):
+#     return [[word2id.get(token, id_unknown) for token in list_tokens]
+#             for list_tokens in list_list_tokens]
+
 
 def tokens_to_ids(list_list_tokens, word2id, id_unknown=id_unknown):
     list_list_ids = []
     for list_tokens in list_list_tokens:
         this_sentence = []
         for token in list_tokens:
-            for vulgarity in ['bitch','cock','fuck','shit','dick','cunt']:
-                if vulgarity in token: 
-                    this_id = word2id.get(token,word2id.get(vulgarity,1))
+            for vulgarity in vulgarities:
+                if vulgarity in token:
+                    this_id = word2id.get(token,
+                                          word2id.get(vulgarity, id_unknown))
                     break
                 else:
-                    this_id = word2id.get(token,1)
+                    this_id = word2id.get(token, id_unknown)
             this_sentence.append(this_id)
         list_list_ids.append(this_sentence)
     return list_list_ids
