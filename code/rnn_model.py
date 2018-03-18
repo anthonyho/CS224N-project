@@ -35,7 +35,6 @@ example_config = {'exp_name': 'rnn_full_1',
                   'averaging': True,
                   'attention': False,
                   'attention_size': 10,
-                  'sparsemax': False,
                   'clip_gradients': False,
                   'max_grad_norm': 5
                   }
@@ -156,17 +155,10 @@ class RNNModel(Model):
 
     def _add_loss_op(self, logits):
         labels = self.labels_placeholder
-        if self.config.sparsemax:
-            sparsemax = tf.contrib.sparsemax.sparsemax(logits)
-            loss = tf.contrib.sparsemax.sparsemax_loss(logits=logits,
-                                                       sparsemax=sparsemax,
-                                                       labels=labels)
-            loss = tf.reduce_mean(loss)
-        else:
-            loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
-                                                           logits=logits)
-            loss = (tf.reduce_mean(loss * self.config.class_weights) /
-                    self.config.mean_class_weights)
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=labels,
+                                                       logits=logits)
+        loss = (tf.reduce_mean(loss * self.config.class_weights) /
+                self.config.mean_class_weights)
         return loss
 
     def _add_training_op(self, loss):
@@ -193,11 +185,7 @@ class RNNModel(Model):
 
     def _predict_on_batch(self, sess, inputs_batch, masks_batch):
         feed = self._create_feed_dict(inputs_batch, masks_batch)
-        if self.config.sparsemax:
-            prob = sess.run(tf.contrib.sparsemax.sparsemax(self.pred),
-                            feed_dict=feed)
-        else:
-            prob = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
+        prob = sess.run(tf.sigmoid(self.pred), feed_dict=feed)
         return prob
 
     def _run_epoch_train(self, sess, inputs, masks, labels, shuffle):
