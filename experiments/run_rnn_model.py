@@ -46,7 +46,6 @@ config1 = {'exp_name': 'rnn_test',
            'averaging': False,  # overwritten by attention
            'attention': True,
            'attention_size': 10,
-           'sparsemax': False,
            'clip_gradients': True,
            'max_grad_norm': 5
            }
