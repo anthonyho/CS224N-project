@@ -14,6 +14,9 @@ To train model:
 3. Configure experimental setup at ./experiments/run_{nn,rnn}_model.py
 4. Train model and evaluate performance by running
    > cd experiments
+
    > python run_nn_model.py
+
    or 
+
    > python run_rnn_model.py
